@@ -3,9 +3,13 @@ package basic
 import (
 	"errors"
 	"fmt"
-	"oscrud/transport"
 	"reflect"
 	"strconv"
+)
+
+// Tag Definitions
+var (
+	QueryTag = "query"
 )
 
 // Parser :
@@ -28,7 +32,7 @@ func (p Parser) ParseQuery(query map[string]interface{}, assign interface{}) err
 	npt := t.Elem()
 	for i := 0; i < npt.NumField(); i++ {
 		field := npt.Field(i)
-		tag := string(field.Tag.Get(transport.QueryTag))
+		tag := string(field.Tag.Get(QueryTag))
 		if tag != "" && query[tag] != nil {
 			err := parseQuery(query[tag], setter.Field(i))
 			if err != nil {

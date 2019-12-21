@@ -1,10 +1,15 @@
 package action
 
+// ServiceHandler :
+type ServiceHandler func(ServiceContext) error
+
 // ServiceContext :
 type ServiceContext interface {
-	// GetType() string
-	// GetID() interface{}
-	// GetBody() []byte
+	GetType() string
+	GetID() string
+	GetBody() string
+	GetTransport() string
+	// ParseID(assign interface{}) error
 	// ParseBody(body interface{}) error
 	// GetQuery() map[string]interface{}
 	// ParseQuery(query interface{}) error
@@ -13,10 +18,10 @@ type ServiceContext interface {
 
 // Service :
 type Service interface {
-	Find(ServiceContext, EndpointContext) error
-	Get(ServiceContext, EndpointContext) error
-	Create(ServiceContext, EndpointContext) error
-	Update(ServiceContext, EndpointContext) error
-	Patch(ServiceContext, EndpointContext) error
-	Remove(ServiceContext, EndpointContext) error
+	Find(ServiceContext) error
+	Get(ServiceContext) error
+	Create(ServiceContext) error
+	Update(ServiceContext) error
+	Patch(ServiceContext) error
+	Remove(ServiceContext) error
 }

@@ -1,18 +1,17 @@
 package action
 
+// EndpointHandler :
+type EndpointHandler func(EndpointContext) error
+
 // EndpointContext :
 type EndpointContext interface {
 	GetMethod() string
+	GetTransport() string
 	GetURL() string
 	GetPath() string
-	GetTransport() string
-	ParseBody(body interface{}) error
-	ParseQuery(query interface{}) error
+	GetParam(key string) string
 	GetBody() string
 	GetQuery() map[string]interface{}
-}
-
-// Endpoint :
-type Endpoint interface {
-	Action(ctx EndpointContext) error
+	ParseBody(body interface{}) error
+	ParseQuery(query interface{}) error
 }

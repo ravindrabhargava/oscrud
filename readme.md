@@ -44,6 +44,7 @@ Still under development, any PR or suggestion is welcome.
 # Current Structure
 
 * Parser current bind on Transport because Parser would be use when getting `body`, `query` from transport layer.
+* Transport Layer will create EndpointContext & ServiceContext and pass to handler
 * Endpoint is a single action api.
 * Service is a restful api standard api mostly CRUD endpoints.
 * Route is currently like 
@@ -61,7 +62,8 @@ Still under development, any PR or suggestion is welcome.
 
 # Developer Experience
 
-This still not my expected structure, any suggesiton or enhancement is welcome.
+This still not my expected structure, any suggesiton or enhancement is welcome. May take a look in `example/service.go`.
 
 * Endpoint with EndpointContext mostly contain Request & Response related.
 * Service with ServiceContext mostly contain Service related ( id, query, body ).
+* Object Chaining Intialization

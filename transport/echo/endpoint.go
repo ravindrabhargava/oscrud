@@ -3,7 +3,7 @@ package echo
 import (
 	"oscrud/parser"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // EndpointContext :
@@ -30,6 +30,16 @@ func (c EndpointContext) ParseQuery(assign interface{}) error {
 	return nil
 }
 
+// ParseBody :
+func (c EndpointContext) ParseBody(body interface{}) error {
+	return c.Context.Bind(body)
+}
+
+// GetParam :
+func (c EndpointContext) GetParam(key string) string {
+	return c.Context.Param(key)
+}
+
 // GetMethod :
 func (c EndpointContext) GetMethod() string {
 	return c.Context.Request().Method
@@ -53,11 +63,6 @@ func (c EndpointContext) GetTransport() string {
 // GetPath :
 func (c EndpointContext) GetPath() string {
 	return c.Context.Path()
-}
-
-// ParseBody :
-func (c EndpointContext) ParseBody(body interface{}) error {
-	return c.Context.Bind(body)
 }
 
 // GetBody :

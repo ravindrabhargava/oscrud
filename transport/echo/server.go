@@ -6,7 +6,7 @@ import (
 	"oscrud/action"
 	"oscrud/parser"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 // Transport :
@@ -37,8 +37,8 @@ func (t *Transport) UseParser(parser parser.Parser) *Transport {
 	return t
 }
 
-// Register :
-func (t *Transport) Register(method string, path string, handler action.Handler) {
+// RegisterService :
+func (t *Transport) RegisterService(service, method, path string, handler action.ServiceHandler) {
 	t.Echo.Add(
 		method, path,
 		func(e echo.Context) error {
@@ -56,7 +56,36 @@ func (t *Transport) Register(method string, path string, handler action.Handler)
 				}
 			}
 
-			srv := ServiceContext{}
+			ctx := ServiceContext{
+				Type:   service,
+				ID:     e.Param("id"),
+				Body:   body,
+				Parser: t.Parser,
+				Echo:   t.Echo,
+			}
+			return handler(ctx)
+		},
+	)
+}
+
+// RegisterEndpoint :
+func (t *Transport) RegisterEndpoint(method, path string, handler action.EndpointHandler) {
+	t.Echo.Add(
+		method, path,
+		func(e echo.Context) error {
+			body, err := ioutil.ReadAll(e.Request().Body)
+			if err != nil {
+				panic(err)
+			}
+
+			query := make(map[string]interface{})
+			for key, value := range e.Request().URL.Query() {
+				if len(value) == 1 {
+					query[key] = value[0]
+				} else {
+					query[key] = value
+				}
+			}
 			ctx := EndpointContext{
 				Body:    body,
 				Query:   query,
@@ -64,14 +93,13 @@ func (t *Transport) Register(method string, path string, handler action.Handler)
 				Context: e,
 				Echo:    t.Echo,
 			}
-			handler(ctx, srv)
-			return nil
+			return handler(ctx)
 		},
 	)
 }
 
 // Start :
-func (t *Transport) Start(h action.RequestHandler) error {
+func (t *Transport) Start() error {
 	port := fmt.Sprintf(":%d", t.Port)
 	return t.Echo.Start(port)
 }

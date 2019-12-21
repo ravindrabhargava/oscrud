@@ -1,69 +1,132 @@
-# Components
+# Oscrud
 
-* Transport
-* Service & Endpoint
-* Authentication
-* Middleware / Lifecycle [ Before, After ]
-* Parser ( Query, Body(?) )
+Oscrud is a golang resftul api wrapper framework. The purpose of the framework is make everything independent like transport, authentication, middleware and parser. So we can change the component to what we want anytime without changing code. This framework is inspired from [FeathersJS](https://feathersjs.com/). Currently framework still under development, any suggestion or PR is welcome.
 
-# Endpoints
+# Planning
 
-* Method, Path => GET item
+Current is what i planned to achive in version one of the framework.
 
-- GET /item => endpoint.Action
+### Transport
 
-# Service
+* Echo
+* Micro
+* SocketIO
 
-* BasePath => item
+### Service
 
-- GET /item -> service.find
-- POST /item -> service.create
-- GET /item/:id -> service.get
-- PUT /item/:id -> service.update
-- PATCH /item/:id -> service.patch
-- DELETE /item/:id -> service.delete
+* CRUD Endpoints
+* Standardize ORM Support
 
-# Example
+### Endpoints
 
-Http still not working you may try using echo instead gohttp.
+* Single Action
+
+### Authentication
+
+* Local ( username & password )
+* Key ( api key )
+* OAuth
+* JWT
+
+### Middleware
+
+* Before & After
+
+### Parser
+
+* ParseQuery
+* ParseBody
+* ParseValue
+
+# Start Server
 
 ```
-$ go run example/service.go
+$ git clone https://github.com/Oskang09/oscrud.git
+$ go get https://github.com/oxequa/realize // If you don't have 'realize'
 $ realize start
 ```
 
-# Status
-
-Still under development, any PR or suggestion is welcome.
-
-# PR / Discussion / Suggestion 
+# PR & Suggestion 
 
 * Cases
 * Example
 
-# Current Structure
+# Example
 
-* Parser current bind on Transport because Parser would be use when getting `body`, `query` from transport layer.
-* Transport Layer will create EndpointContext & ServiceContext and pass to handler
-* Endpoint is a single action api.
-* Service is a restful api standard api mostly CRUD endpoints.
-* Route is currently like 
+You can view more [examples](https://github.com/Oskang09/oscrud/tree/master/example) at `example` folder.
 
-```json
-{
-    "GET": {
-        "item/:id": (handler)
-    },
-    "POST": {
-        "item": (handler)
-    }
+```
+package main
+
+import (
+	"log"
+	"oscrud"
+	"oscrud/action"
+	"oscrud/parser/basic"
+	ec "oscrud/transport/echo"
+
+	"github.com/labstack/echo/v4"
+)
+
+// TestService :
+type TestService struct {
+}
+
+// NewService :
+func NewService() TestService {
+	return TestService{}
+}
+
+// Find :
+func (t TestService) Find(service action.ServiceContext) error {
+	log.Println("You're accessing TestService.Find")
+	return nil
+}
+
+// Get :
+func (t TestService) Get(service action.ServiceContext) error {
+	log.Println("You're accessing TestService.Get")
+	return nil
+}
+
+// Create :
+func (t TestService) Create(service action.ServiceContext) error {
+	log.Println("You're accessing TestService.Create")
+	return nil
+}
+
+// Update :
+func (t TestService) Update(service action.ServiceContext) error {
+	log.Println("You're accessing TestService.Update")
+	return nil
+}
+
+// Patch :
+func (t TestService) Patch(service action.ServiceContext) error {
+	log.Println("You're accessing TestService.Patch")
+	return nil
+}
+
+// Remove :
+func (t TestService) Remove(service action.ServiceContext) error {
+	log.Println("You're accessing TestService.Remove")
+	return nil
+}
+
+// Test2 :
+func Test2(ctx action.EndpointContext) error {
+	log.Println("You're accessing Endpoint.")
+	return nil
+}
+
+func main() {
+	server := oscrud.NewOscrud()
+	server.RegisterService("test", NewService())
+	server.RegisterEndpoint("GET", "/test2", Test2)
+
+	server.RegisterTransport(
+		ec.NewEcho(echo.New()).UsePort(5001).UseParser(basic.NewParser()),
+	)
+	server.Start()
 }
 ```
-
-# Developer Experience
-
-This still not my expected structure, any suggesiton or enhancement is welcome. May take a look in `example/service.go`.
-
-* Endpoint with EndpointContext mostly contain Request & Response related.
-* Service with ServiceContext mostly contain Service related ( id, query, body ).
-* Object Chaining Intialization

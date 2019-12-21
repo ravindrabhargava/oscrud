@@ -3,26 +3,24 @@ package oscrud
 import (
 	"oscrud/action"
 	"oscrud/transport"
-	"reflect"
+	"strings"
 )
 
 // Oscrud :
 type Oscrud struct {
 	Transports []transport.Transport
-	Routes     map[string]map[string]interface{}
+	Routes     []string
+	Services   map[string]action.ServiceHandler
+	Endpoints  map[string]action.EndpointHandler
 }
 
 // NewOscrud :
 func NewOscrud() *Oscrud {
 	return &Oscrud{
 		Transports: make([]transport.Transport, 0),
-		Routes: map[string]map[string]interface{}{
-			"GET":    map[string]interface{}{},
-			"POST":   map[string]interface{}{},
-			"PUT":    map[string]interface{}{},
-			"PATCH":  map[string]interface{}{},
-			"DELETE": map[string]interface{}{},
-		},
+		Routes:     make([]string, 0),
+		Services:   make(map[string]action.ServiceHandler),
+		Endpoints:  make(map[string]action.EndpointHandler),
 	}
 }
 
@@ -35,49 +33,64 @@ func (server *Oscrud) RegisterTransport(transports ...transport.Transport) *Oscr
 }
 
 // RegisterEndpoint : ( Even Index )
-func (server *Oscrud) RegisterEndpoint(method string, path string, endpoint action.Endpoint) *Oscrud {
-	server.Routes[method][path] = endpoint.Action
+func (server *Oscrud) RegisterEndpoint(method string, basePath string, endpoint action.EndpointHandler) *Oscrud {
+	path := strings.TrimPrefix(basePath, "/")
+	routeKey := "endpoint." + path + "." + method
+	server.Routes = append(server.Routes, routeKey)
+	server.Endpoints[routeKey] = endpoint
 	return server
 }
 
 // RegisterService :
 func (server *Oscrud) RegisterService(basePath string, service action.Service) *Oscrud {
-	server.Routes["GET"][basePath] = service.Find
-	server.Routes["POST"][basePath] = service.Create
-	server.Routes["GET"][basePath+"/:id"] = service.Get
-	server.Routes["PUT"][basePath+"/:id"] = service.Update
-	server.Routes["PATCH"][basePath+"/:id"] = service.Patch
-	server.Routes["DELETE"][basePath+"/:id"] = service.Remove
-	return server
-}
+	path := strings.TrimPrefix(basePath, "/")
 
-// Handler :
-func (server *Oscrud) Handler(handler interface{}) action.Handler {
-	return func(ctx action.EndpointContext, srv action.ServiceContext) {
-		fn := reflect.ValueOf(handler)
-		in := make([]reflect.Value, 0)
-		if fn.Type().NumIn() == 1 {
-			in = append(in, reflect.ValueOf(ctx))
-		} else {
-			in = append(in, reflect.ValueOf(srv))
-			in = append(in, reflect.ValueOf(ctx))
-		}
-		fn.Call(in)
-	}
+	findKey := "service." + path + ".get.find"
+	createKey := "service." + path + ".post.create"
+	getKey := "service." + path + "/:id.get.get"
+	updateKey := "service." + path + "/:id.put.update"
+	patchKey := "service." + path + "/:id.patch.patch"
+	deleteKey := "service." + path + "/:id.delete.remove"
+
+	server.Routes = append(server.Routes, findKey)
+	server.Services[findKey] = service.Find
+
+	server.Routes = append(server.Routes, getKey)
+	server.Services[getKey] = service.Get
+
+	server.Routes = append(server.Routes, createKey)
+	server.Services[createKey] = service.Create
+
+	server.Routes = append(server.Routes, updateKey)
+	server.Services[updateKey] = service.Update
+
+	server.Routes = append(server.Routes, patchKey)
+	server.Services[patchKey] = service.Get
+
+	server.Routes = append(server.Routes, deleteKey)
+	server.Services[deleteKey] = service.Get
+
+	return server
 }
 
 // Start :
 func (server *Oscrud) Start() {
 	for _, trs := range server.Transports {
+		for _, route := range server.Routes {
+			setting := strings.Split(route, ".")
 
-		for method, pathHandler := range server.Routes {
-			for path, handler := range pathHandler {
-				trs.Register(method, path, server.Handler(handler))
+			path := setting[1]
+			method := strings.ToUpper(setting[2])
+			if setting[0] == "service" {
+				action := setting[3]
+				trs.RegisterService(action, method, path, server.Services[route])
+			} else if setting[0] == "endpoint" {
+				trs.RegisterEndpoint(method, path, server.Endpoints[route])
 			}
 		}
 
 		go func(t transport.Transport) {
-			err := t.Start(server.Handler)
+			err := t.Start()
 			if err != nil {
 				panic(err)
 			}

@@ -11,8 +11,8 @@ import (
 
 // Transport :
 type Transport struct {
-	Echo   *echo.Echo
 	Port   int
+	Echo   *echo.Echo
 	Parser []parser.Parser
 }
 

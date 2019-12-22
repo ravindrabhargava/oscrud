@@ -50,11 +50,6 @@ func (c EndpointContext) GetQuery() map[string]interface{} {
 	return c.Query
 }
 
-// GetURL :
-func (c EndpointContext) GetURL() string {
-	return c.Context.Request().RequestURI
-}
-
 // GetTransport :
 func (c EndpointContext) GetTransport() string {
 	return "ECHO"

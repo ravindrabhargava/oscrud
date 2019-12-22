@@ -69,5 +69,13 @@ func main() {
 	server.RegisterTransport(
 		ec.NewEcho(echo.New()).UsePort(5001).UseParser(basic.NewParser()),
 	)
+
+	server.CallEndpoint(
+		oscrud.EndpointContext{
+			Method: "GET",
+			Path:   "/test2",
+		},
+	)
+
 	server.Start()
 }

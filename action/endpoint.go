@@ -7,7 +7,6 @@ type EndpointHandler func(EndpointContext) error
 type EndpointContext interface {
 	GetMethod() string
 	GetTransport() string
-	GetURL() string
 	GetPath() string
 	GetParam(key string) string
 	GetBody() string

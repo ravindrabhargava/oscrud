@@ -24,6 +24,17 @@ func NewOscrud() *Oscrud {
 	}
 }
 
+// CallService :
+func (server *Oscrud) CallService(service, action string) {
+
+}
+
+// CallEndpoint :
+func (server *Oscrud) CallEndpoint(ctx EndpointContext) error {
+	routeKey := "endpoint." + strings.TrimPrefix(ctx.Path, "/") + "." + strings.ToLower(ctx.Method)
+	return server.Endpoints[routeKey](ctx)
+}
+
 // RegisterTransport :
 func (server *Oscrud) RegisterTransport(transports ...transport.Transport) *Oscrud {
 	for _, trs := range transports {
@@ -35,7 +46,7 @@ func (server *Oscrud) RegisterTransport(transports ...transport.Transport) *Oscr
 // RegisterEndpoint : ( Even Index )
 func (server *Oscrud) RegisterEndpoint(method string, basePath string, endpoint action.EndpointHandler) *Oscrud {
 	path := strings.TrimPrefix(basePath, "/")
-	routeKey := "endpoint." + path + "." + method
+	routeKey := "endpoint." + path + "." + strings.ToLower(method)
 	server.Routes = append(server.Routes, routeKey)
 	server.Endpoints[routeKey] = endpoint
 	return server

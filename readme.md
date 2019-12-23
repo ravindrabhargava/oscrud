@@ -12,6 +12,12 @@ Current is what i planned to achive in version one of the framework.
 * Micro
 * SocketIO
 
+### Binder
+
+* Standardize `Bind(i interface{})` with reflect.Tag `query`, `param`, `body`.
+* Query and Body wiil be `map[string]interface{}` by default
+* Param will be `map[string]string` by default
+
 ### Service
 
 * CRUD Endpoints
@@ -31,12 +37,6 @@ Current is what i planned to achive in version one of the framework.
 ### Middleware
 
 * Before & After
-
-### Parser
-
-* ParseQuery
-* ParseBody
-* ParseValue
 
 # Start Server
 
@@ -62,7 +62,6 @@ import (
 	"log"
 	"oscrud"
 	"oscrud/action"
-	"oscrud/parser/basic"
 	ec "oscrud/transport/echo"
 
 	"github.com/labstack/echo/v4"
@@ -125,7 +124,7 @@ func main() {
 	server.RegisterEndpoint("GET", "/test2", Test2)
 
 	server.RegisterTransport(
-		ec.NewEcho(echo.New()).UsePort(5001).UseParser(basic.NewParser()),
+		ec.NewEcho(echo.New()).UsePort(5001),
 	)
 
 	server.CallEndpoint(
@@ -137,5 +136,4 @@ func main() {
 
 	server.Start()
 }
-
 ```

@@ -1,16 +1,16 @@
 package echo
 
-import "oscrud/parser"
-
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/labstack/echo/v4"
+)
 
 // ServiceContext :
 type ServiceContext struct {
-	Type   string
-	ID     string
-	Body   []byte
-	Echo   *echo.Echo
-	Parser []parser.Parser
+	Context echo.Context
+	Type    string
+	ID      string
+	Body    []byte
+	Query   map[string]interface{}
 }
 
 // GetTransport :
@@ -31,4 +31,14 @@ func (c ServiceContext) GetID() string {
 // GetBody :
 func (c ServiceContext) GetBody() string {
 	return string(c.Body)
+}
+
+// Bind :
+func (c ServiceContext) Bind(body interface{}) error {
+	return c.Context.Bind(body)
+}
+
+// GetQuery :
+func (c ServiceContext) GetQuery() map[string]interface{} {
+	return c.Query
 }

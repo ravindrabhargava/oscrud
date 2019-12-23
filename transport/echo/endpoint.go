@@ -1,38 +1,19 @@
 package echo
 
 import (
-	"oscrud/parser"
-
 	"github.com/labstack/echo/v4"
 )
 
 // EndpointContext :
 type EndpointContext struct {
-	Echo    *echo.Echo
 	Context echo.Context
 	Query   map[string]interface{}
 	Body    []byte
-	Parser  []parser.Parser
 }
 
-// ParseQuery :
-func (c EndpointContext) ParseQuery(assign interface{}) error {
-	for index, parser := range c.Parser {
-		err := parser.ParseQuery(c.Query, assign)
-		if err == nil {
-			return nil
-		}
-
-		if index == len(c.Parser) {
-			return err
-		}
-	}
-	return nil
-}
-
-// ParseBody :
-func (c EndpointContext) ParseBody(body interface{}) error {
-	return c.Context.Bind(body)
+// Bind :
+func (c EndpointContext) Bind(i interface{}) error {
+	return c.Context.Bind(i)
 }
 
 // GetParam :
@@ -63,4 +44,29 @@ func (c EndpointContext) GetPath() string {
 // GetBody :
 func (c EndpointContext) GetBody() string {
 	return string(c.Body)
+}
+
+// String :
+func (c EndpointContext) String(status int, text string) error {
+	return c.Context.String(status, text)
+}
+
+// HTML :
+func (c EndpointContext) HTML(status int, html string) error {
+	return c.Context.HTML(status, html)
+}
+
+// JSON :
+func (c EndpointContext) JSON(status int, i interface{}) error {
+	return c.Context.JSON(status, i)
+}
+
+// XML :
+func (c EndpointContext) XML(status int, i interface{}) error {
+	return c.Context.XML(status, i)
+}
+
+// Redirect :
+func (c EndpointContext) Redirect(status int, url string) error {
+	return c.Context.Redirect(status, url)
 }

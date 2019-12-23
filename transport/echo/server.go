@@ -4,36 +4,27 @@ import (
 	"fmt"
 	"io/ioutil"
 	"oscrud/action"
-	"oscrud/parser"
 
 	"github.com/labstack/echo/v4"
 )
 
 // Transport :
 type Transport struct {
-	Port   int
-	Echo   *echo.Echo
-	Parser []parser.Parser
+	Port int
+	Echo *echo.Echo
 }
 
 // NewEcho :
 func NewEcho(echo *echo.Echo) *Transport {
 	return &Transport{
-		Echo:   echo,
-		Port:   3000,
-		Parser: make([]parser.Parser, 0),
+		Echo: echo,
+		Port: 3000,
 	}
 }
 
 // UsePort :
 func (t *Transport) UsePort(port int) *Transport {
 	t.Port = port
-	return t
-}
-
-// UseParser :
-func (t *Transport) UseParser(parser parser.Parser) *Transport {
-	t.Parser = append(t.Parser, parser)
 	return t
 }
 
@@ -57,11 +48,10 @@ func (t *Transport) RegisterService(service, method, path string, handler action
 			}
 
 			ctx := ServiceContext{
-				Type:   service,
-				ID:     e.Param("id"),
-				Body:   body,
-				Parser: t.Parser,
-				Echo:   t.Echo,
+				Context: e,
+				Type:    service,
+				ID:      e.Param("id"),
+				Body:    body,
 			}
 			return handler(ctx)
 		},
@@ -87,11 +77,9 @@ func (t *Transport) RegisterEndpoint(method, path string, handler action.Endpoin
 				}
 			}
 			ctx := EndpointContext{
+				Context: e,
 				Body:    body,
 				Query:   query,
-				Parser:  t.Parser,
-				Context: e,
-				Echo:    t.Echo,
 			}
 			return handler(ctx)
 		},

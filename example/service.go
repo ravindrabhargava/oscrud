@@ -4,7 +4,6 @@ import (
 	"log"
 	"oscrud"
 	"oscrud/action"
-	"oscrud/parser/basic"
 	ec "oscrud/transport/echo"
 
 	"github.com/labstack/echo/v4"
@@ -67,7 +66,7 @@ func main() {
 	server.RegisterEndpoint("GET", "/test2", Test2)
 
 	server.RegisterTransport(
-		ec.NewEcho(echo.New()).UsePort(5001).UseParser(basic.NewParser()),
+		ec.NewEcho(echo.New()).UsePort(5001),
 	)
 
 	server.CallEndpoint(

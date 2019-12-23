@@ -2,7 +2,6 @@ package oscrud
 
 import (
 	"encoding/json"
-	"oscrud/parser"
 )
 
 // EndpointContext :
@@ -12,7 +11,6 @@ type EndpointContext struct {
 	Param  map[string]string
 	Body   map[string]interface{}
 	Query  map[string]interface{}
-	Parser []parser.Parser
 }
 
 // GetMethod :
@@ -49,26 +47,36 @@ func (c EndpointContext) GetBody() string {
 	return string(bytes)
 }
 
-// ParseQuery :
-func (c EndpointContext) ParseQuery(assign interface{}) error {
-	for index, parser := range c.Parser {
-		err := parser.ParseQuery(c.Query, assign)
-		if err == nil {
-			return nil
-		}
-
-		if index == len(c.Parser) {
-			return err
-		}
-	}
-	return nil
-}
-
-// ParseBody :
-func (c EndpointContext) ParseBody(body interface{}) error {
+// Bind :
+func (c EndpointContext) Bind(i interface{}) error {
 	bytes, err := json.Marshal(c.Body)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(bytes, body)
+	return json.Unmarshal(bytes, i)
+}
+
+// String :
+func (c EndpointContext) String(status int, text string) error {
+	return nil
+}
+
+// HTML :
+func (c EndpointContext) HTML(status int, html string) error {
+	return nil
+}
+
+// JSON :
+func (c EndpointContext) JSON(status int, i interface{}) error {
+	return nil
+}
+
+// XML :
+func (c EndpointContext) XML(status int, i interface{}) error {
+	return nil
+}
+
+// Redirect :
+func (c EndpointContext) Redirect(status int, url string) error {
+	return nil
 }

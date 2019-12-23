@@ -11,6 +11,11 @@ type EndpointContext interface {
 	GetParam(key string) string
 	GetBody() string
 	GetQuery() map[string]interface{}
-	ParseBody(body interface{}) error
-	ParseQuery(query interface{}) error
+	Bind(i interface{}) error
+
+	String(status int, text string) error
+	HTML(status int, html string) error
+	JSON(status int, i interface{}) error
+	XML(status int, i interface{}) error
+	Redirect(status int, url string) error
 }

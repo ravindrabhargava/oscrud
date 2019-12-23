@@ -5,15 +5,12 @@ type ServiceHandler func(ServiceContext) error
 
 // ServiceContext :
 type ServiceContext interface {
+	GetTransport() string
 	GetType() string
 	GetID() string
 	GetBody() string
-	GetTransport() string
-	// ParseID(assign interface{}) error
-	// ParseBody(body interface{}) error
-	// GetQuery() map[string]interface{}
-	// ParseQuery(query interface{}) error
-	// Get(assign interface{}) error
+	GetQuery() map[string]interface{}
+	Bind(i interface{}) error
 }
 
 // Service :

@@ -1,8 +1,10 @@
 package oscrud
 
 import (
+	"fmt"
 	"oscrud/action"
 	"oscrud/transport"
+	"oscrud/util"
 	"strings"
 )
 
@@ -25,14 +27,25 @@ func NewOscrud() *Oscrud {
 }
 
 // CallService :
-func (server *Oscrud) CallService(service, action string) {
-
+func (server *Oscrud) CallService(ctx ServiceContext) error {
+	method := util.GetMethodByAction(ctx.Action)
+	basePath := strings.TrimPrefix(ctx.Path, "/")
+	serviceKey := strings.ToLower("service." + util.TransformPath(basePath, ctx.Action) + "." + method + "." + ctx.Action)
+	serviceFn, ok := server.Services[serviceKey]
+	if !ok {
+		return fmt.Errorf("Service '%s.%s' not found, maybe you call before service registration?", basePath, ctx.Action)
+	}
+	return serviceFn(ctx)
 }
 
 // CallEndpoint :
 func (server *Oscrud) CallEndpoint(ctx EndpointContext) error {
-	routeKey := "endpoint." + strings.TrimPrefix(ctx.Path, "/") + "." + strings.ToLower(ctx.Method)
-	return server.Endpoints[routeKey](ctx)
+	routeKey := strings.ToLower("endpoint." + strings.TrimPrefix(ctx.Path, "/") + "." + ctx.Method)
+	routeFn, ok := server.Endpoints[routeKey]
+	if !ok {
+		return fmt.Errorf("Endpoint '%s %s' not found, maybe you call before endpoint registration?", strings.ToUpper(ctx.Method), ctx.Path)
+	}
+	return routeFn(ctx)
 }
 
 // RegisterTransport :
@@ -43,10 +56,10 @@ func (server *Oscrud) RegisterTransport(transports ...transport.Transport) *Oscr
 	return server
 }
 
-// RegisterEndpoint : ( Even Index )
+// RegisterEndpoint :
 func (server *Oscrud) RegisterEndpoint(method string, basePath string, endpoint action.EndpointHandler) *Oscrud {
 	path := strings.TrimPrefix(basePath, "/")
-	routeKey := "endpoint." + path + "." + strings.ToLower(method)
+	routeKey := strings.ToLower("endpoint." + path + "." + method)
 	server.Routes = append(server.Routes, routeKey)
 	server.Endpoints[routeKey] = endpoint
 	return server
@@ -91,7 +104,7 @@ func (server *Oscrud) Start() {
 			setting := strings.Split(route, ".")
 
 			path := setting[1]
-			method := strings.ToUpper(setting[2])
+			method := setting[2]
 			if setting[0] == "service" {
 				action := setting[3]
 				trs.RegisterService(action, method, path, server.Services[route])

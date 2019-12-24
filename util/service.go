@@ -6,9 +6,9 @@ import "strings"
 func TransformPath(base, action string) string {
 	switch strings.ToLower(action) {
 	case "find":
-		return base + "/"
+		return base
 	case "create":
-		return base + "/"
+		return base
 	case "get":
 		return base + "/:id"
 	case "update":

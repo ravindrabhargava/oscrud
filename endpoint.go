@@ -1,9 +1,5 @@
 package oscrud
 
-import (
-	"encoding/json"
-)
-
 // EndpointContext :
 type EndpointContext struct {
 	Method string
@@ -33,27 +29,24 @@ func (c EndpointContext) GetQuery() map[string]interface{} {
 	return c.Query
 }
 
+// GetParams :
+func (c EndpointContext) GetParams() map[string]string {
+	return c.Param
+}
+
 // GetParam :
 func (c EndpointContext) GetParam(key string) string {
 	return c.Param[key]
 }
 
 // GetBody :
-func (c EndpointContext) GetBody() string {
-	bytes, err := json.Marshal(c.Body)
-	if err != nil {
-		return ""
-	}
-	return string(bytes)
+func (c EndpointContext) GetBody() map[string]interface{} {
+	return c.Body
 }
 
 // Bind :
 func (c EndpointContext) Bind(i interface{}) error {
-	bytes, err := json.Marshal(c.Body)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(bytes, i)
+	return BindEndpoint(c.Param, c.Body, c.Query, i)
 }
 
 // String :

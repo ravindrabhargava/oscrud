@@ -1,9 +1,11 @@
 package echo
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"oscrud/action"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -31,11 +33,19 @@ func (t *Transport) UsePort(port int) *Transport {
 // RegisterService :
 func (t *Transport) RegisterService(service, method, path string, handler action.ServiceHandler) {
 	t.Echo.Add(
-		method, path,
+		strings.ToUpper(method), path,
 		func(e echo.Context) error {
-			body, err := ioutil.ReadAll(e.Request().Body)
+			bytes, err := ioutil.ReadAll(e.Request().Body)
 			if err != nil {
 				panic(err)
+			}
+
+			body := make(map[string]interface{})
+			if e.Request().Method != "GET" {
+				err = json.Unmarshal(bytes, &body)
+				if err != nil {
+					panic(err)
+				}
 			}
 
 			query := make(map[string]interface{})
@@ -52,6 +62,7 @@ func (t *Transport) RegisterService(service, method, path string, handler action
 				Type:    service,
 				ID:      e.Param("id"),
 				Body:    body,
+				Query:   query,
 			}
 			return handler(ctx)
 		},
@@ -61,11 +72,19 @@ func (t *Transport) RegisterService(service, method, path string, handler action
 // RegisterEndpoint :
 func (t *Transport) RegisterEndpoint(method, path string, handler action.EndpointHandler) {
 	t.Echo.Add(
-		method, path,
+		strings.ToUpper(method), path,
 		func(e echo.Context) error {
-			body, err := ioutil.ReadAll(e.Request().Body)
+			bytes, err := ioutil.ReadAll(e.Request().Body)
 			if err != nil {
 				panic(err)
+			}
+
+			body := make(map[string]interface{})
+			if e.Request().Method != "GET" {
+				err = json.Unmarshal(bytes, &body)
+				if err != nil {
+					panic(err)
+				}
 			}
 
 			query := make(map[string]interface{})
@@ -76,8 +95,16 @@ func (t *Transport) RegisterEndpoint(method, path string, handler action.Endpoin
 					query[key] = value
 				}
 			}
+
+			param := make(map[string]string)
+			values := e.ParamValues()
+			for index, name := range e.ParamNames() {
+				param[name] = values[index]
+			}
+
 			ctx := EndpointContext{
 				Context: e,
+				Param:   param,
 				Body:    body,
 				Query:   query,
 			}

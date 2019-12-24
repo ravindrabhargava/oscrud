@@ -2,6 +2,7 @@ package echo
 
 import (
 	"github.com/labstack/echo/v4"
+	"oscrud"
 )
 
 // ServiceContext :
@@ -9,7 +10,7 @@ type ServiceContext struct {
 	Context echo.Context
 	Type    string
 	ID      string
-	Body    []byte
+	Body    map[string]interface{}
 	Query   map[string]interface{}
 }
 
@@ -29,16 +30,16 @@ func (c ServiceContext) GetID() string {
 }
 
 // GetBody :
-func (c ServiceContext) GetBody() string {
-	return string(c.Body)
-}
-
-// Bind :
-func (c ServiceContext) Bind(body interface{}) error {
-	return c.Context.Bind(body)
+func (c ServiceContext) GetBody() map[string]interface{} {
+	return c.Body
 }
 
 // GetQuery :
 func (c ServiceContext) GetQuery() map[string]interface{} {
 	return c.Query
+}
+
+// Bind :
+func (c ServiceContext) Bind(i interface{}) error {
+	return oscrud.BindService(c.ID, c.Body, c.Query, i)
 }

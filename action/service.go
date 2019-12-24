@@ -8,7 +8,7 @@ type ServiceContext interface {
 	GetTransport() string
 	GetType() string
 	GetID() string
-	GetBody() string
+	GetBody() map[string]interface{}
 	GetQuery() map[string]interface{}
 	Bind(i interface{}) error
 }

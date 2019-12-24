@@ -2,23 +2,30 @@ package echo
 
 import (
 	"github.com/labstack/echo/v4"
+	"oscrud"
 )
 
 // EndpointContext :
 type EndpointContext struct {
 	Context echo.Context
+	Param   map[string]string
 	Query   map[string]interface{}
-	Body    []byte
+	Body    map[string]interface{}
 }
 
 // Bind :
 func (c EndpointContext) Bind(i interface{}) error {
-	return c.Context.Bind(i)
+	return oscrud.BindEndpoint(c.Param, c.Body, c.Query, i)
+}
+
+// GetParams :
+func (c EndpointContext) GetParams() map[string]string {
+	return c.Param
 }
 
 // GetParam :
 func (c EndpointContext) GetParam(key string) string {
-	return c.Context.Param(key)
+	return c.Param[key]
 }
 
 // GetMethod :
@@ -42,8 +49,8 @@ func (c EndpointContext) GetPath() string {
 }
 
 // GetBody :
-func (c EndpointContext) GetBody() string {
-	return string(c.Body)
+func (c EndpointContext) GetBody() map[string]interface{} {
+	return c.Body
 }
 
 // String :

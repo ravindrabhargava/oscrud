@@ -9,7 +9,8 @@ type EndpointContext interface {
 	GetTransport() string
 	GetPath() string
 	GetParam(key string) string
-	GetBody() string
+	GetParams() map[string]string
+	GetBody() map[string]interface{}
 	GetQuery() map[string]interface{}
 	Bind(i interface{}) error
 

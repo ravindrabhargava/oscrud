@@ -31,9 +31,9 @@ func (t *Transport) UsePort(port int) *Transport {
 }
 
 // RegisterService :
-func (t *Transport) RegisterService(service, method, path string, handler action.ServiceHandler) {
+func (t *Transport) RegisterService(service string, route action.ServiceRoute) {
 	t.Echo.Add(
-		strings.ToUpper(method), path,
+		strings.ToUpper(route.Method), route.Path,
 		func(e echo.Context) error {
 			bytes, err := ioutil.ReadAll(e.Request().Body)
 			if err != nil {
@@ -59,20 +59,20 @@ func (t *Transport) RegisterService(service, method, path string, handler action
 
 			ctx := ServiceContext{
 				Context: e,
-				Type:    service,
+				Type:    route.Action,
 				ID:      e.Param("id"),
 				Body:    body,
 				Query:   query,
 			}
-			return handler(ctx)
+			return route.Handler(ctx)
 		},
 	)
 }
 
 // RegisterEndpoint :
-func (t *Transport) RegisterEndpoint(method, path string, handler action.EndpointHandler) {
+func (t *Transport) RegisterEndpoint(endpoint string, route action.EndpointRoute) {
 	t.Echo.Add(
-		strings.ToUpper(method), path,
+		strings.ToUpper(route.Method), route.Path,
 		func(e echo.Context) error {
 			bytes, err := ioutil.ReadAll(e.Request().Body)
 			if err != nil {
@@ -108,7 +108,7 @@ func (t *Transport) RegisterEndpoint(method, path string, handler action.Endpoin
 				Body:    body,
 				Query:   query,
 			}
-			return handler(ctx)
+			return route.Handler(ctx)
 		},
 	)
 }

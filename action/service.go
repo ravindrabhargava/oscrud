@@ -28,3 +28,11 @@ type Service interface {
 	Patch(ServiceContext) error
 	Remove(ServiceContext) error
 }
+
+// ServiceRoute :
+type ServiceRoute struct {
+	Action  string
+	Method  string
+	Path    string
+	Handler ServiceHandler
+}

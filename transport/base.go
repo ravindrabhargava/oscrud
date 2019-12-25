@@ -4,7 +4,7 @@ import "oscrud/action"
 
 // Transport :
 type Transport interface {
-	RegisterEndpoint(method, path string, handler action.EndpointHandler)
-	RegisterService(service, method, path string, handler action.ServiceHandler)
+	RegisterEndpoint(endpoint string, route action.EndpointRoute)
+	RegisterService(service string, route action.ServiceRoute)
 	Start() error
 }

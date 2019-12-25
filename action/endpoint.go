@@ -20,3 +20,10 @@ type EndpointContext interface {
 	JSON(status int, i interface{}) error
 	XML(status int, i interface{}) error
 }
+
+// EndpointRoute :
+type EndpointRoute struct {
+	Method  string
+	Path    string
+	Handler EndpointHandler
+}

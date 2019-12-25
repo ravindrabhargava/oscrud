@@ -2,13 +2,12 @@ package oscrud
 
 // ServiceContext :
 type ServiceContext struct {
-	Action string
-	Path   string
-	Type   string
-	ID     string
-	Body   map[string]interface{}
-	Query  map[string]interface{}
-	Result *ServiceResult
+	Service string
+	Action  string
+	ID      string
+	Body    map[string]interface{}
+	Query   map[string]interface{}
+	Result  *ServiceResult
 }
 
 // ServiceResult :
@@ -30,7 +29,7 @@ func (c ServiceContext) GetTransport() string {
 
 // GetType :
 func (c ServiceContext) GetType() string {
-	return c.Type
+	return c.Action
 }
 
 // GetID :

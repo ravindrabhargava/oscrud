@@ -5,6 +5,7 @@ import (
 	"oscrud"
 	"oscrud/action"
 	ec "oscrud/transport/echo"
+	socketio "oscrud/transport/socketio"
 
 	"github.com/labstack/echo/v4"
 )
@@ -72,22 +73,22 @@ func Test2(ctx action.EndpointContext) error {
 
 func main() {
 	server := oscrud.NewOscrud()
-	server.RegisterService("test", NewService())
-	server.RegisterEndpoint("GET", "/test2/:id/:test", Test2)
+	server.RegisterService("test", "test", NewService())
+	server.RegisterEndpoint("test2", "GET", "/test2/:id/:test", Test2)
 	server.RegisterTransport(
 		ec.NewEcho(echo.New()).UsePort(5001),
+		socketio.NewSocket(nil).UsePort(5000),
 	)
 
 	server.CallService(
 		oscrud.ServiceContext{
-			Action: "find",
-			Path:   "test",
+			Service: "test",
+			Action:  "find",
 		},
 	)
 	server.CallEndpoint(
 		oscrud.EndpointContext{
-			Method: "GET",
-			Path:   "/test2/:id/:test",
+			Endpoint: "test2",
 			Param: map[string]string{
 				"id":   "12",
 				"test": "1",

@@ -2,13 +2,13 @@ package oscrud
 
 // EndpointContext :
 type EndpointContext struct {
-	Method string
-	Path   string
-	Param  map[string]string
-	Body   map[string]interface{}
-	Query  map[string]interface{}
-	Status int
-	Result *EndpointResult
+	Endpoint string
+	Method   string
+	Path     string
+	Param    map[string]string
+	Body     map[string]interface{}
+	Query    map[string]interface{}
+	Result   *EndpointResult
 }
 
 // EndpointResult :

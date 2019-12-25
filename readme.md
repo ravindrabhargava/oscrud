@@ -63,6 +63,7 @@ import (
 	"oscrud"
 	"oscrud/action"
 	ec "oscrud/transport/echo"
+	socketio "oscrud/transport/socketio"
 
 	"github.com/labstack/echo/v4"
 )
@@ -114,26 +115,52 @@ func (t TestService) Remove(service action.ServiceContext) error {
 
 // Test2 :
 func Test2(ctx action.EndpointContext) error {
+
+	var i struct {
+		Test0 int    `param:"id"`
+		Test1 string `param:"test"`
+		Test2 uint64 `query:"test"`
+		Test3 int32  `body:"test"`
+	}
+
+	err := ctx.Bind(&i)
+	log.Println(i, err)
 	log.Println("You're accessing Endpoint.")
 	return nil
 }
 
 func main() {
 	server := oscrud.NewOscrud()
-	server.RegisterService("test", NewService())
-	server.RegisterEndpoint("GET", "/test2", Test2)
-
+	server.RegisterService("test", "test", NewService())
+	server.RegisterEndpoint("test2", "GET", "/test2/:id/:test", Test2)
 	server.RegisterTransport(
 		ec.NewEcho(echo.New()).UsePort(5001),
+		socketio.NewSocket(nil).UsePort(5000),
 	)
 
+	server.CallService(
+		oscrud.ServiceContext{
+			Service: "test",
+			Action:  "find",
+		},
+	)
 	server.CallEndpoint(
 		oscrud.EndpointContext{
-			Method: "GET",
-			Path:   "/test2",
+			Endpoint: "test2",
+			Param: map[string]string{
+				"id":   "12",
+				"test": "1",
+			},
+			Body: map[string]interface{}{
+				"test": 100,
+			},
+			Query: map[string]interface{}{
+				"test": 2000,
+			},
 		},
 	)
 
 	server.Start()
 }
+
 ```

@@ -7,6 +7,20 @@ type EndpointContext struct {
 	Param  map[string]string
 	Body   map[string]interface{}
 	Query  map[string]interface{}
+	Status int
+	Result *EndpointResult
+}
+
+// EndpointResult :
+type EndpointResult struct {
+	Status      int
+	ContentType string
+	Result      interface{}
+}
+
+// GetContext :
+func (c EndpointContext) GetContext() interface{} {
+	return nil
 }
 
 // GetMethod :
@@ -51,25 +65,40 @@ func (c EndpointContext) Bind(i interface{}) error {
 
 // String :
 func (c EndpointContext) String(status int, text string) error {
+	c.Result = &EndpointResult{
+		Status:      status,
+		Result:      text,
+		ContentType: "text/plain",
+	}
 	return nil
 }
 
 // HTML :
 func (c EndpointContext) HTML(status int, html string) error {
+	c.Result = &EndpointResult{
+		Status:      status,
+		Result:      html,
+		ContentType: "text/html",
+	}
 	return nil
 }
 
 // JSON :
 func (c EndpointContext) JSON(status int, i interface{}) error {
+	c.Result = &EndpointResult{
+		Status:      status,
+		Result:      i,
+		ContentType: "application/json",
+	}
 	return nil
 }
 
 // XML :
 func (c EndpointContext) XML(status int, i interface{}) error {
-	return nil
-}
-
-// Redirect :
-func (c EndpointContext) Redirect(status int, url string) error {
+	c.Result = &EndpointResult{
+		Status:      status,
+		Result:      i,
+		ContentType: "application/xml",
+	}
 	return nil
 }

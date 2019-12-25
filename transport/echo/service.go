@@ -14,6 +14,11 @@ type ServiceContext struct {
 	Query   map[string]interface{}
 }
 
+// GetContext :
+func (c ServiceContext) GetContext() interface{} {
+	return c.Context
+}
+
 // GetTransport :
 func (c ServiceContext) GetTransport() string {
 	return "ECHO"
@@ -42,4 +47,24 @@ func (c ServiceContext) GetQuery() map[string]interface{} {
 // Bind :
 func (c ServiceContext) Bind(i interface{}) error {
 	return oscrud.BindService(c.ID, c.Body, c.Query, i)
+}
+
+// String :
+func (c ServiceContext) String(status int, text string) error {
+	return c.Context.String(status, text)
+}
+
+// HTML :
+func (c ServiceContext) HTML(status int, html string) error {
+	return c.Context.HTML(status, html)
+}
+
+// JSON :
+func (c ServiceContext) JSON(status int, i interface{}) error {
+	return c.Context.JSON(status, i)
+}
+
+// XML :
+func (c ServiceContext) XML(status int, i interface{}) error {
+	return c.Context.XML(status, i)
 }

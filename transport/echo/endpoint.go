@@ -18,6 +18,11 @@ func (c EndpointContext) Bind(i interface{}) error {
 	return oscrud.BindEndpoint(c.Param, c.Body, c.Query, i)
 }
 
+// GetContext :
+func (c EndpointContext) GetContext() interface{} {
+	return c.Context
+}
+
 // GetParams :
 func (c EndpointContext) GetParams() map[string]string {
 	return c.Param
@@ -71,9 +76,4 @@ func (c EndpointContext) JSON(status int, i interface{}) error {
 // XML :
 func (c EndpointContext) XML(status int, i interface{}) error {
 	return c.Context.XML(status, i)
-}
-
-// Redirect :
-func (c EndpointContext) Redirect(status int, url string) error {
-	return c.Context.Redirect(status, url)
 }

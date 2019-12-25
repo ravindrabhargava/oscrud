@@ -27,25 +27,33 @@ func NewOscrud() *Oscrud {
 }
 
 // CallService :
-func (server *Oscrud) CallService(ctx ServiceContext) error {
+func (server *Oscrud) CallService(ctx ServiceContext) (*ServiceResult, error) {
 	method := util.GetMethodByAction(ctx.Action)
 	basePath := strings.TrimPrefix(ctx.Path, "/")
 	serviceKey := strings.ToLower("service." + util.TransformPath(basePath, ctx.Action) + "." + method + "." + ctx.Action)
 	serviceFn, ok := server.Services[serviceKey]
 	if !ok {
-		return fmt.Errorf("Service '%s.%s' not found, maybe you call before service registration?", basePath, ctx.Action)
+		return nil, fmt.Errorf("Service '%s.%s' not found, maybe you call before service registration?", basePath, ctx.Action)
 	}
-	return serviceFn(ctx)
+	err := serviceFn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return ctx.Result, nil
 }
 
 // CallEndpoint :
-func (server *Oscrud) CallEndpoint(ctx EndpointContext) error {
+func (server *Oscrud) CallEndpoint(ctx EndpointContext) (*EndpointResult, error) {
 	routeKey := strings.ToLower("endpoint." + strings.TrimPrefix(ctx.Path, "/") + "." + ctx.Method)
 	routeFn, ok := server.Endpoints[routeKey]
 	if !ok {
-		return fmt.Errorf("Endpoint '%s %s' not found, maybe you call before endpoint registration?", strings.ToUpper(ctx.Method), ctx.Path)
+		return nil, fmt.Errorf("Endpoint '%s %s' not found, maybe you call before endpoint registration?", strings.ToUpper(ctx.Method), ctx.Path)
 	}
-	return routeFn(ctx)
+	err := routeFn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return ctx.Result, nil
 }
 
 // RegisterTransport :

@@ -21,6 +21,30 @@ func TransformPath(base, action string) string {
 	return ""
 }
 
+// GetActionByRoute :
+func GetActionByRoute(route string) string {
+	if strings.HasPrefix(route, "POST") {
+		return "create"
+	}
+
+	if strings.HasPrefix(route, "PUT") {
+		return "update"
+	}
+
+	if strings.HasPrefix(route, "PATCH") {
+		return "patch"
+	}
+
+	if strings.HasPrefix(route, "DELETE") {
+		return "remove"
+	}
+
+	if strings.HasSuffix(route, "/:id") {
+		return "get"
+	}
+	return "find"
+}
+
 // GetMethodByAction :
 func GetMethodByAction(action string) string {
 	switch strings.ToLower(action) {

@@ -1,7 +1,6 @@
 package oscrud
 
 import (
-	"fmt"
 	"oscrud/endpoint"
 	"oscrud/service"
 	"oscrud/transport"
@@ -28,40 +27,6 @@ func NewOscrud() *Oscrud {
 		Services:   make(map[string]service.Route),
 		Endpoints:  make(map[string]endpoint.Route),
 	}
-}
-
-// Endpoint :
-func (server *Oscrud) Endpoint(endpoint string, ctx *endpoint.Request) (*endpoint.Response, error) {
-	routeKey := endpoint
-	route, ok := server.Endpoints[routeKey]
-	if !ok {
-		return nil, fmt.Errorf("Endpoint '%s' not found, maybe you call before endpoint registration?", endpoint)
-	}
-	return route.Call(ctx)
-}
-
-// Service :
-func (server *Oscrud) Service(service string) Service {
-	return Service{server, service}
-}
-
-func serviceCall(s Service, ctx *service.Request, action string) (*service.Response, error) {
-	routeKey := s.service + "." + action
-	service, ok := s.server.Services[routeKey]
-	if !ok {
-		return nil, fmt.Errorf("Service '%s.%s' not found, maybe you call before service registration?", s.service, action)
-	}
-	return service.Call(ctx)
-}
-
-// Get :
-func (s Service) Get(ctx *service.Request) (*service.Response, error) {
-	return serviceCall(s, ctx, "get")
-}
-
-// Find :
-func (s Service) Find(ctx *service.Request) (*service.Response, error) {
-	return serviceCall(s, ctx, "find")
 }
 
 // RegisterTransport :

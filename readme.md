@@ -157,4 +157,19 @@ func main() {
 
 	server.Start()
 }
+
+
+[LOG]
+[21:20:01][OSCRUD] : 2019/12/26 21:20:01 You're accessing TestService.Find
+[21:20:01][OSCRUD] : 2019/12/26 21:20:01 {12 1 2000 100} <nil>
+[21:20:01][OSCRUD] : 2019/12/26 21:20:01 You're accessing Endpoint.
+[21:20:01][OSCRUD] :    ____    __
+[21:20:01][OSCRUD] :   / __/___/ /  ___
+[21:20:01][OSCRUD] :  / _// __/ _ \/ _ \
+[21:20:01][OSCRUD] : /___/\__/_//_/\___/ v4.1.11
+[21:20:01][OSCRUD] : High performance, minimalist Go web framework
+[21:20:01][OSCRUD] : https://echo.labstack.com
+[21:20:01][OSCRUD] : ____________________________________O/_______
+[21:20:01][OSCRUD] :                                     O\
+[21:20:01][OSCRUD] : ⇨ http server started on [::]:5001
 ```

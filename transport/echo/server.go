@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"oscrud/action"
+	"oscrud/endpoint"
+	"oscrud/service"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -31,7 +32,7 @@ func (t *Transport) UsePort(port int) *Transport {
 }
 
 // RegisterService :
-func (t *Transport) RegisterService(service string, route action.ServiceRoute) {
+func (t *Transport) RegisterService(srv string, route service.Route) {
 	t.Echo.Add(
 		strings.ToUpper(route.Method), route.Path,
 		func(e echo.Context) error {
@@ -45,6 +46,15 @@ func (t *Transport) RegisterService(service string, route action.ServiceRoute) {
 				err = json.Unmarshal(bytes, &body)
 				if err != nil {
 					panic(err)
+				}
+			}
+
+			header := make(map[string]interface{})
+			for key, value := range e.Request().Header {
+				if len(value) == 1 {
+					header[key] = value[0]
+				} else {
+					header[key] = value
 				}
 			}
 
@@ -58,11 +68,13 @@ func (t *Transport) RegisterService(service string, route action.ServiceRoute) {
 			}
 
 			ctx := ServiceContext{
-				Context: e,
-				Type:    route.Action,
-				ID:      e.Param("id"),
-				Body:    body,
-				Query:   query,
+				context: e,
+				service: srv,
+				action:  route.Action,
+				id:      e.Param("id"),
+				body:    body,
+				query:   query,
+				header:  header,
 			}
 			return route.Handler(ctx)
 		},
@@ -70,7 +82,7 @@ func (t *Transport) RegisterService(service string, route action.ServiceRoute) {
 }
 
 // RegisterEndpoint :
-func (t *Transport) RegisterEndpoint(endpoint string, route action.EndpointRoute) {
+func (t *Transport) RegisterEndpoint(endpoint string, route endpoint.Route) {
 	t.Echo.Add(
 		strings.ToUpper(route.Method), route.Path,
 		func(e echo.Context) error {
@@ -96,6 +108,15 @@ func (t *Transport) RegisterEndpoint(endpoint string, route action.EndpointRoute
 				}
 			}
 
+			header := make(map[string]interface{})
+			for key, value := range e.Request().Header {
+				if len(value) == 1 {
+					header[key] = value[0]
+				} else {
+					header[key] = value
+				}
+			}
+
 			param := make(map[string]string)
 			values := e.ParamValues()
 			for index, name := range e.ParamNames() {
@@ -103,10 +124,12 @@ func (t *Transport) RegisterEndpoint(endpoint string, route action.EndpointRoute
 			}
 
 			ctx := EndpointContext{
-				Context: e,
-				Param:   param,
-				Body:    body,
-				Query:   query,
+				context:  e,
+				endpoint: endpoint,
+				param:    param,
+				body:     body,
+				query:    query,
+				header:   header,
 			}
 			return route.Handler(ctx)
 		},

@@ -3,7 +3,8 @@ package socketio
 import (
 	"fmt"
 	"net/http"
-	"oscrud/action"
+	"oscrud/endpoint"
+	"oscrud/service"
 
 	engineio "github.com/googollee/go-engine.io"
 	socketio "github.com/googollee/go-socket.io"
@@ -13,6 +14,14 @@ import (
 type Transport struct {
 	Port   int
 	Socket *socketio.Server
+}
+
+// SocketContext :
+type SocketContext struct {
+	Query  map[string]interface{} `json:"query"`
+	Body   map[string]interface{} `json:"body"`
+	Header map[string]interface{} `json:"header"`
+	Param  map[string]string      `json:"param"`
 }
 
 // NewSocket :
@@ -35,13 +44,23 @@ func (t *Transport) UsePort(port int) *Transport {
 }
 
 // RegisterService :
-func (t *Transport) RegisterService(service string, route action.ServiceRoute) {
-
+func (t *Transport) RegisterService(srv string, route service.Route) {
+	t.Socket.OnEvent(
+		"/", srv+"."+route.Action,
+		func(socket socketio.Conn, object string) string {
+			return "SERVICE"
+		},
+	)
 }
 
 // RegisterEndpoint :
-func (t *Transport) RegisterEndpoint(endpoint string, route action.EndpointRoute) {
-
+func (t *Transport) RegisterEndpoint(endpoint string, route endpoint.Route) {
+	t.Socket.OnEvent(
+		"/", endpoint,
+		func(socket socketio.Conn, object string) string {
+			return "ENDPOINT"
+		},
+	)
 }
 
 // Start :

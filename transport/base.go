@@ -1,10 +1,13 @@
 package transport
 
-import "oscrud/action"
+import (
+	"oscrud/endpoint"
+	"oscrud/service"
+)
 
 // Transport :
 type Transport interface {
-	RegisterEndpoint(endpoint string, route action.EndpointRoute)
-	RegisterService(service string, route action.ServiceRoute)
+	RegisterEndpoint(endpoint string, route endpoint.Route)
+	RegisterService(service string, route service.Route)
 	Start() error
 }

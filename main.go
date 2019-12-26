@@ -2,7 +2,8 @@ package oscrud
 
 import (
 	"fmt"
-	"oscrud/action"
+	"oscrud/endpoint"
+	"oscrud/service"
 	"oscrud/transport"
 	"strings"
 )
@@ -10,17 +11,57 @@ import (
 // Oscrud :
 type Oscrud struct {
 	Transports []transport.Transport
-	Services   map[string]action.ServiceRoute
-	Endpoints  map[string]action.EndpointRoute
+	Services   map[string]service.Route
+	Endpoints  map[string]endpoint.Route
+}
+
+// Service :
+type Service struct {
+	server  *Oscrud
+	service string
 }
 
 // NewOscrud :
 func NewOscrud() *Oscrud {
 	return &Oscrud{
 		Transports: make([]transport.Transport, 0),
-		Services:   make(map[string]action.ServiceRoute),
-		Endpoints:  make(map[string]action.EndpointRoute),
+		Services:   make(map[string]service.Route),
+		Endpoints:  make(map[string]endpoint.Route),
 	}
+}
+
+// Endpoint :
+func (server *Oscrud) Endpoint(endpoint string, ctx *endpoint.Request) (*endpoint.Response, error) {
+	routeKey := endpoint
+	route, ok := server.Endpoints[routeKey]
+	if !ok {
+		return nil, fmt.Errorf("Endpoint '%s' not found, maybe you call before endpoint registration?", endpoint)
+	}
+	return route.Call(ctx)
+}
+
+// Service :
+func (server *Oscrud) Service(service string) Service {
+	return Service{server, service}
+}
+
+func serviceCall(s Service, ctx *service.Request, action string) (*service.Response, error) {
+	routeKey := s.service + "." + action
+	service, ok := s.server.Services[routeKey]
+	if !ok {
+		return nil, fmt.Errorf("Service '%s.%s' not found, maybe you call before service registration?", s.service, action)
+	}
+	return service.Call(ctx)
+}
+
+// Get :
+func (s Service) Get(ctx *service.Request) (*service.Response, error) {
+	return serviceCall(s, ctx, "get")
+}
+
+// Find :
+func (s Service) Find(ctx *service.Request) (*service.Response, error) {
+	return serviceCall(s, ctx, "find")
 }
 
 // RegisterTransport :
@@ -31,49 +72,19 @@ func (server *Oscrud) RegisterTransport(transports ...transport.Transport) *Oscr
 	return server
 }
 
-// CallService :
-func (server *Oscrud) CallService(ctx ServiceContext) (*ServiceResult, error) {
-	routeKey := ctx.Service + "." + ctx.Action
-	service, ok := server.Services[routeKey]
-	if !ok {
-		return nil, fmt.Errorf("Service '%s.%s' not found, maybe you call before service registration?", ctx.Service, ctx.Action)
-	}
-	err := service.Handler(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return ctx.Result, nil
-}
-
-// CallEndpoint :
-func (server *Oscrud) CallEndpoint(ctx EndpointContext) (*EndpointResult, error) {
-	routeKey := ctx.Endpoint
-	route, ok := server.Endpoints[routeKey]
-	if !ok {
-		return nil, fmt.Errorf("Endpoint '%s' not found, maybe you call before endpoint registration?", routeKey)
-	}
-
-	ctx.Method = route.Method
-	ctx.Path = route.Path
-	err := route.Handler(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return ctx.Result, nil
-}
-
 // RegisterEndpoint :
-func (server *Oscrud) RegisterEndpoint(key, method, route string, handler action.EndpointHandler) *Oscrud {
-	server.Endpoints[key] = action.EndpointRoute{
-		Method:  method,
-		Path:    strings.TrimPrefix(route, "/"),
-		Handler: handler,
+func (server *Oscrud) RegisterEndpoint(key, method, route string, handler endpoint.Handler) *Oscrud {
+	server.Endpoints[key] = endpoint.Route{
+		Endpoint: key,
+		Method:   method,
+		Path:     strings.TrimPrefix(route, "/"),
+		Handler:  handler,
 	}
 	return server
 }
 
 // RegisterService :
-func (server *Oscrud) RegisterService(key, basepath string, service action.Service) *Oscrud {
+func (server *Oscrud) RegisterService(key, basepath string, class service.Service) *Oscrud {
 	path := strings.TrimPrefix(basepath, "/")
 	findKey := key + ".find"
 	createKey := key + ".create"
@@ -82,46 +93,52 @@ func (server *Oscrud) RegisterService(key, basepath string, service action.Servi
 	patchKey := key + ".patch"
 	deleteKey := key + ".remove"
 
-	server.Services[findKey] = action.ServiceRoute{
+	server.Services[findKey] = service.Route{
+		Service: key,
 		Action:  "find",
 		Method:  "get",
 		Path:    path,
-		Handler: service.Find,
+		Handler: class.Find,
 	}
 
-	server.Services[getKey] = action.ServiceRoute{
+	server.Services[getKey] = service.Route{
+		Service: key,
 		Action:  "get",
 		Method:  "get",
 		Path:    path,
-		Handler: service.Get,
+		Handler: class.Get,
 	}
 
-	server.Services[createKey] = action.ServiceRoute{
+	server.Services[createKey] = service.Route{
+		Service: key,
 		Action:  "create",
 		Method:  "post",
 		Path:    path,
-		Handler: service.Create,
+		Handler: class.Create,
 	}
 
-	server.Services[updateKey] = action.ServiceRoute{
+	server.Services[updateKey] = service.Route{
+		Service: key,
 		Action:  "update",
 		Method:  "put",
 		Path:    path,
-		Handler: service.Update,
+		Handler: class.Update,
 	}
 
-	server.Services[patchKey] = action.ServiceRoute{
+	server.Services[patchKey] = service.Route{
+		Service: key,
 		Action:  "patch",
 		Method:  "patch",
 		Path:    path,
-		Handler: service.Patch,
+		Handler: class.Patch,
 	}
 
-	server.Services[deleteKey] = action.ServiceRoute{
+	server.Services[deleteKey] = service.Route{
+		Service: key,
 		Action:  "remove",
 		Method:  "delete",
 		Path:    path,
-		Handler: service.Patch,
+		Handler: class.Patch,
 	}
 
 	return server

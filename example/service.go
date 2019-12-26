@@ -3,7 +3,8 @@ package main
 import (
 	"log"
 	"oscrud"
-	"oscrud/action"
+	"oscrud/endpoint"
+	"oscrud/service"
 	ec "oscrud/transport/echo"
 	socketio "oscrud/transport/socketio"
 
@@ -20,44 +21,43 @@ func NewService() TestService {
 }
 
 // Find :
-func (t TestService) Find(service action.ServiceContext) error {
+func (t TestService) Find(service service.Context) error {
 	log.Println("You're accessing TestService.Find")
 	return nil
 }
 
 // Get :
-func (t TestService) Get(service action.ServiceContext) error {
+func (t TestService) Get(service service.Context) error {
 	log.Println("You're accessing TestService.Get")
 	return nil
 }
 
 // Create :
-func (t TestService) Create(service action.ServiceContext) error {
+func (t TestService) Create(service service.Context) error {
 	log.Println("You're accessing TestService.Create")
 	return nil
 }
 
 // Update :
-func (t TestService) Update(service action.ServiceContext) error {
+func (t TestService) Update(service service.Context) error {
 	log.Println("You're accessing TestService.Update")
 	return nil
 }
 
 // Patch :
-func (t TestService) Patch(service action.ServiceContext) error {
+func (t TestService) Patch(service service.Context) error {
 	log.Println("You're accessing TestService.Patch")
 	return nil
 }
 
 // Remove :
-func (t TestService) Remove(service action.ServiceContext) error {
+func (t TestService) Remove(service service.Context) error {
 	log.Println("You're accessing TestService.Remove")
 	return nil
 }
 
 // Test2 :
-func Test2(ctx action.EndpointContext) error {
-
+func Test2(ctx endpoint.Context) error {
 	var i struct {
 		Test0 int    `param:"id"`
 		Test1 string `param:"test"`
@@ -68,6 +68,7 @@ func Test2(ctx action.EndpointContext) error {
 	err := ctx.Bind(&i)
 	log.Println(i, err)
 	log.Println("You're accessing Endpoint.")
+	ctx.JSON(200, i)
 	return nil
 }
 
@@ -80,27 +81,21 @@ func main() {
 		socketio.NewSocket(nil).UsePort(5000),
 	)
 
-	server.CallService(
-		oscrud.ServiceContext{
-			Service: "test",
-			Action:  "find",
-		},
-	)
-	server.CallEndpoint(
-		oscrud.EndpointContext{
-			Endpoint: "test2",
-			Param: map[string]string{
-				"id":   "12",
-				"test": "1",
-			},
-			Body: map[string]interface{}{
-				"test": 100,
-			},
-			Query: map[string]interface{}{
-				"test": 2000,
-			},
-		},
-	)
+	req := service.NewRequest()
+	server.Service("test").Find(req)
+
+	param := map[string]string{
+		"id":   "12",
+		"test": "1",
+	}
+	body := map[string]interface{}{
+		"test": 100,
+	}
+	query := map[string]interface{}{
+		"test": 2000,
+	}
+	req2 := endpoint.NewRequest().SetParam(param).SetBody(body).SetQuery(query)
+	server.Endpoint("test2", req2)
 
 	server.Start()
 }

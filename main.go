@@ -1,133 +1,108 @@
 package oscrud
 
 import (
-	"oscrud/endpoint"
-	"oscrud/service"
-	"oscrud/transport"
+	"fmt"
+	"oscrud/util"
 	"strings"
+
+	"github.com/gbrlsnchs/radix"
 )
 
 // Oscrud :
 type Oscrud struct {
-	Transports []transport.Transport
-	Services   map[string]service.Route
-	Endpoints  map[string]endpoint.Route
-}
-
-// Service :
-type Service struct {
-	server  *Oscrud
-	service string
+	transports []Transport
+	router     *radix.Tree
 }
 
 // NewOscrud :
 func NewOscrud() *Oscrud {
+	tree := radix.New(radix.Tsafe)
+	tree.SetBoundaries(':', '/')
 	return &Oscrud{
-		Transports: make([]transport.Transport, 0),
-		Services:   make(map[string]service.Route),
-		Endpoints:  make(map[string]endpoint.Route),
+		transports: make([]Transport, 0),
+		router:     tree,
 	}
 }
 
 // RegisterTransport :
-func (server *Oscrud) RegisterTransport(transports ...transport.Transport) *Oscrud {
-	for _, trs := range transports {
-		server.Transports = append(server.Transports, trs)
+func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
+	for _, transport := range transports {
+		server.transports = append(server.transports, transport)
 	}
 	return server
 }
 
 // RegisterEndpoint :
-func (server *Oscrud) RegisterEndpoint(key, method, route string, handler endpoint.Handler) *Oscrud {
-	server.Endpoints[key] = endpoint.Route{
-		Endpoint: key,
-		Method:   method,
-		Path:     strings.TrimPrefix(route, "/"),
-		Handler:  handler,
-	}
-	return server
-}
-
-// RegisterService :
-func (server *Oscrud) RegisterService(key, basepath string, class service.Service) *Oscrud {
-	path := strings.TrimPrefix(basepath, "/")
-	findKey := key + ".find"
-	createKey := key + ".create"
-	getKey := key + ".get"
-	updateKey := key + ".update"
-	patchKey := key + ".patch"
-	deleteKey := key + ".remove"
-
-	server.Services[findKey] = service.Route{
-		Service: key,
-		Action:  "find",
-		Method:  "get",
-		Path:    path,
-		Handler: class.Find,
+func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler ...Handler) *Oscrud {
+	radix := util.RadixPath(method, endpoint)
+	route := Route{
+		Method:  strings.ToLower(method),
+		Route:   endpoint,
+		Handler: handler,
 	}
 
-	server.Services[getKey] = service.Route{
-		Service: key,
-		Action:  "get",
-		Method:  "get",
-		Path:    path,
-		Handler: class.Get,
+	server.router.Add(radix, route)
+	for _, transport := range server.transports {
+		transport.Register(
+			method, endpoint,
+			func(req *Request) (*ResultResponse, *ErrorResponse) {
+				ctx := server.lookupHandler(&route, req)
+				return ctx.result, ctx.exception
+			},
+		)
 	}
-
-	server.Services[createKey] = service.Route{
-		Service: key,
-		Action:  "create",
-		Method:  "post",
-		Path:    path,
-		Handler: class.Create,
-	}
-
-	server.Services[updateKey] = service.Route{
-		Service: key,
-		Action:  "update",
-		Method:  "put",
-		Path:    path,
-		Handler: class.Update,
-	}
-
-	server.Services[patchKey] = service.Route{
-		Service: key,
-		Action:  "patch",
-		Method:  "patch",
-		Path:    path,
-		Handler: class.Patch,
-	}
-
-	server.Services[deleteKey] = service.Route{
-		Service: key,
-		Action:  "remove",
-		Method:  "delete",
-		Path:    path,
-		Handler: class.Patch,
-	}
-
 	return server
 }
 
 // Start :
 func (server *Oscrud) Start() {
-	for _, trs := range server.Transports {
-
-		for key, service := range server.Services {
-			srv := strings.Split(key, ".")
-			trs.RegisterService(srv[0], service)
-		}
-
-		for key, endpoint := range server.Endpoints {
-			trs.RegisterEndpoint(key, endpoint)
-		}
-
-		go func(t transport.Transport) {
-			err := t.Start()
+	for _, trs := range server.transports {
+		go func(t Transport) {
+			err := t.Start(
+				func(req *Request) (*ResultResponse, *ErrorResponse) {
+					ctx := server.lookupHandler(nil, req)
+					return ctx.result, ctx.exception
+				},
+			)
 			if err != nil {
 				panic(err)
 			}
 		}(trs)
 	}
 	select {}
+}
+
+// lookupHandler :
+func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
+	ctx := Context{
+		method:    req.method,
+		transport: req.transport,
+		path:      req.path,
+		param:     req.param,
+		header:    req.header,
+		query:     req.query,
+		body:      req.body,
+		sent:      false,
+		result:    nil,
+		exception: nil,
+	}
+
+	if route == nil {
+		node, params := server.router.Get(util.RadixPath(req.method, req.path))
+		if node == nil {
+			return ctx.Message(404, fmt.Sprintf("%s %s doesn't exists", req.method, req.path)).End()
+		}
+
+		route = node.Value.(*Route)
+		ctx.param = params
+	}
+
+	for _, handler := range route.Handler {
+		ctx = handler(ctx)
+		if ctx.sent {
+			return ctx.End()
+		}
+	}
+
+	return ctx.Message(404, fmt.Sprintf("%s %s response doesn't end properly", req.method, req.path)).End()
 }

@@ -4,8 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"oscrud/endpoint"
-	"oscrud/service"
+	"oscrud"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -31,60 +30,10 @@ func (t *Transport) UsePort(port int) *Transport {
 	return t
 }
 
-// RegisterService :
-func (t *Transport) RegisterService(srv string, route service.Route) {
+// Register :
+func (t *Transport) Register(method string, endpoint string, handler oscrud.TransportHandler) {
 	t.Echo.Add(
-		strings.ToUpper(route.Method), route.Path,
-		func(e echo.Context) error {
-			bytes, err := ioutil.ReadAll(e.Request().Body)
-			if err != nil {
-				panic(err)
-			}
-
-			body := make(map[string]interface{})
-			if e.Request().Method != "GET" {
-				err = json.Unmarshal(bytes, &body)
-				if err != nil {
-					panic(err)
-				}
-			}
-
-			header := make(map[string]interface{})
-			for key, value := range e.Request().Header {
-				if len(value) == 1 {
-					header[key] = value[0]
-				} else {
-					header[key] = value
-				}
-			}
-
-			query := make(map[string]interface{})
-			for key, value := range e.Request().URL.Query() {
-				if len(value) == 1 {
-					query[key] = value[0]
-				} else {
-					query[key] = value
-				}
-			}
-
-			ctx := ServiceContext{
-				context: e,
-				service: srv,
-				action:  route.Action,
-				id:      e.Param("id"),
-				body:    body,
-				query:   query,
-				header:  header,
-			}
-			return route.Handler(ctx)
-		},
-	)
-}
-
-// RegisterEndpoint :
-func (t *Transport) RegisterEndpoint(endpoint string, route endpoint.Route) {
-	t.Echo.Add(
-		strings.ToUpper(route.Method), route.Path,
+		strings.ToUpper(method), endpoint,
 		func(e echo.Context) error {
 			bytes, err := ioutil.ReadAll(e.Request().Body)
 			if err != nil {
@@ -123,21 +72,24 @@ func (t *Transport) RegisterEndpoint(endpoint string, route endpoint.Route) {
 				param[name] = values[index]
 			}
 
-			ctx := EndpointContext{
-				context:  e,
-				endpoint: endpoint,
-				param:    param,
-				body:     body,
-				query:    query,
-				header:   header,
+			req := oscrud.NewRequest(method, endpoint).
+				Transport("ECHO").
+				SetBody(body).
+				SetQuery(query).
+				SetHeader(header).
+				SetParam(param)
+
+			result, exception := handler(req)
+			if exception != nil {
+				return e.JSON(exception.Status(), exception.Stack())
 			}
-			return route.Handler(ctx)
+			return e.JSON(result.Status(), result.Result())
 		},
 	)
 }
 
 // Start :
-func (t *Transport) Start() error {
+func (t *Transport) Start(handler oscrud.TransportHandler) error {
 	port := fmt.Sprintf(":%d", t.Port)
 	return t.Echo.Start(port)
 }

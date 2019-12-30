@@ -1,4 +1,4 @@
-package binder
+package oscrud
 
 import (
 	"errors"
@@ -16,55 +16,8 @@ var (
 	IDTag     = "id"
 )
 
-// BindService :
-func BindService(id string, body map[string]interface{}, query map[string]interface{}, header map[string]interface{}, assign interface{}) error {
-	t := reflect.TypeOf(assign)
-	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
-		return errors.New("binder interface must be addressable struct")
-	}
-
-	setter := reflect.ValueOf(assign).Elem()
-	npt := t.Elem()
-	for i := 0; i < npt.NumField(); i++ {
-		field := npt.Field(i)
-
-		htag := string(field.Tag.Get(HeaderTag))
-		if htag != "" && header[htag] != nil {
-			err := BindValue(setter.Field(i), header[htag])
-			if err != nil {
-				return err
-			}
-		}
-
-		qtag := string(field.Tag.Get(QueryTag))
-		if qtag != "" && query[qtag] != nil {
-			err := BindValue(setter.Field(i), query[qtag])
-			if err != nil {
-				return err
-			}
-		}
-
-		btag := string(field.Tag.Get(BodyTag))
-		if btag != "" && body[btag] != nil {
-			err := BindValue(setter.Field(i), body[btag])
-			if err != nil {
-				return err
-			}
-		}
-
-		idtag := string(field.Tag.Get(IDTag))
-		if idtag != "" && id != "" {
-			err := BindValue(setter.Field(i), id)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-// BindEndpoint :
-func BindEndpoint(header map[string]interface{}, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
+// Bind :
+func Bind(header map[string]interface{}, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
 		return errors.New("binder interface must be addressable struct")

@@ -1,6 +1,23 @@
 package oscrud
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
+
+// Error Definition
+var (
+	ErrNotFound            = errors.New("endpoint or service not found")
+	ErrResponseNotComplete = errors.New("response doesn't called end in all handlers")
+)
+
+func (c Context) missingEnd() Context {
+	c.exception = &ErrorResponse{
+		status: 404,
+		stack:  ErrResponseNotComplete,
+	}
+	return c
+}
 
 // ErrorResponse :
 type ErrorResponse struct {
@@ -22,6 +39,15 @@ func (c ErrorResponse) Stack() error {
 // Result :
 func (c ErrorResponse) Result() interface{} {
 	return c.result
+}
+
+// NotFound :
+func (c Context) NotFound() Context {
+	c.exception = &ErrorResponse{
+		status: 404,
+		stack:  ErrNotFound,
+	}
+	return c
 }
 
 // Error :

@@ -69,6 +69,14 @@ func Test2(ctx oscrud.Context) oscrud.Context {
 	}
 
 	err := ctx.Bind(&i)
+	if err != nil {
+		return ctx.Stack(500, err)
+	}
+
+	if i.Test0 == 0 {
+		return ctx.Error(500, "ID should bigger than 0")
+	}
+
 	log.Println(i, err)
 	log.Println("You're accessing Endpoint.")
 	return ctx.String(200, "TestValue")

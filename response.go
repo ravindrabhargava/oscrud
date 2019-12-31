@@ -30,6 +30,15 @@ func (c ResultResponse) Result() interface{} {
 	return c.result
 }
 
+// NoContent :
+func (c Context) NoContent(status int) Context {
+	c.result = &ResultResponse{
+		status: status,
+		result: nil,
+	}
+	return c
+}
+
 // String :
 func (c Context) String(status int, text string) Context {
 	c.result = &ResultResponse{

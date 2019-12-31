@@ -86,9 +86,10 @@ func After(ctx oscrud.Context) oscrud.Context {
 
 func main() {
 	server := oscrud.NewOscrud()
-	server.RegisterTransport(
-		ec.NewEcho(echo.New()).UsePort(5001),
-	)
+	server.RegisterTransport(ec.NewEcho(echo.New()).UsePort(5001))
 	server.RegisterEndpoint("GET", "/test2/:id/test", Before, Test2, After)
+
+	res, err := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
+	log.Println(res, err)
 	server.Start()
 }

@@ -51,7 +51,7 @@ func (c Context) GetBody() map[string]interface{} {
 
 // Bind :
 func (c Context) Bind(i interface{}) error {
-	return Bind(c.header, c.param, c.body, c.query, i)
+	return bind(c.header, c.param, c.body, c.query, i)
 }
 
 // Header :

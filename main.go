@@ -1,7 +1,6 @@
 package oscrud
 
 import (
-	"fmt"
 	"oscrud/util"
 	"strings"
 
@@ -35,7 +34,7 @@ func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
 // RegisterEndpoint :
 func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler ...Handler) *Oscrud {
 	radix := util.RadixPath(method, endpoint)
-	route := Route{
+	route := &Route{
 		Method:  strings.ToLower(method),
 		Route:   endpoint,
 		Handler: handler,
@@ -46,7 +45,7 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler ...Handl
 		transport.Register(
 			method, endpoint,
 			func(req *Request) (*ResultResponse, *ErrorResponse) {
-				ctx := server.lookupHandler(&route, req)
+				ctx := server.lookupHandler(route, req)
 				return ctx.result, ctx.exception
 			},
 		)
@@ -90,7 +89,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	if route == nil {
 		node, params := server.router.Get(util.RadixPath(req.method, req.path))
 		if node == nil {
-			return ctx.Message(404, fmt.Sprintf("%s %s doesn't exists", req.method, req.path)).End()
+			return ctx.NotFound().End()
 		}
 
 		route = node.Value.(*Route)
@@ -104,5 +103,5 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 		}
 	}
 
-	return ctx.Message(404, fmt.Sprintf("%s %s response doesn't end properly", req.method, req.path)).End()
+	return ctx.missingEnd().End()
 }

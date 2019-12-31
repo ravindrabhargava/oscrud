@@ -12,12 +12,13 @@ type Request struct {
 }
 
 // NewRequest :
-func NewRequest(method, endpoint string) *Request {
-	return &Request{
-		method:    method,
-		path:      endpoint,
-		transport: "INTERNAL",
+func NewRequest(args ...string) *Request {
+	req := &Request{transport: "INTERNAL"}
+	if len(args) == 2 {
+		req.method = args[0]
+		req.path = args[1]
 	}
+	return req
 }
 
 // Transport :

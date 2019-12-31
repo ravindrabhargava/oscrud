@@ -16,8 +16,7 @@ var (
 	IDTag     = "id"
 )
 
-// Bind :
-func Bind(header map[string]interface{}, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
+func bind(header map[string]interface{}, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
 		return errors.New("binder interface must be addressable struct")
@@ -30,7 +29,7 @@ func Bind(header map[string]interface{}, param map[string]string, body map[strin
 
 		htag := string(field.Tag.Get(HeaderTag))
 		if htag != "" && header[htag] != nil {
-			err := BindValue(setter.Field(i), header[htag])
+			err := bindValue(setter.Field(i), header[htag])
 			if err != nil {
 				return err
 			}
@@ -38,7 +37,7 @@ func Bind(header map[string]interface{}, param map[string]string, body map[strin
 
 		qtag := string(field.Tag.Get(QueryTag))
 		if qtag != "" && query[qtag] != nil {
-			err := BindValue(setter.Field(i), query[qtag])
+			err := bindValue(setter.Field(i), query[qtag])
 			if err != nil {
 				return err
 			}
@@ -46,7 +45,7 @@ func Bind(header map[string]interface{}, param map[string]string, body map[strin
 
 		btag := string(field.Tag.Get(BodyTag))
 		if btag != "" && body[btag] != nil {
-			err := BindValue(setter.Field(i), body[btag])
+			err := bindValue(setter.Field(i), body[btag])
 			if err != nil {
 				return err
 			}
@@ -54,7 +53,7 @@ func Bind(header map[string]interface{}, param map[string]string, body map[strin
 
 		ptag := string(field.Tag.Get(ParamTag))
 		if ptag != "" && param[ptag] != "" {
-			err := BindValue(setter.Field(i), param[ptag])
+			err := bindValue(setter.Field(i), param[ptag])
 			if err != nil {
 				return err
 			}
@@ -63,8 +62,7 @@ func Bind(header map[string]interface{}, param map[string]string, body map[strin
 	return nil
 }
 
-// BindValue :
-func BindValue(field reflect.Value, value interface{}) error {
+func bindValue(field reflect.Value, value interface{}) error {
 	switch field.Type().Kind() {
 
 	case reflect.Float32, reflect.Float64:

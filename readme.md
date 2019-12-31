@@ -27,12 +27,9 @@ Current is what i planned to achive in version one of the framework.
 
 * Single Action
 
-### Authentication
+# Context
 
-* Local ( username & password )
-* Key ( api key )
-* OAuth
-* JWT
+* Get & Set ( map[string]interface{} )
 
 ### Middleware
 

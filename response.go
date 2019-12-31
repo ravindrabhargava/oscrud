@@ -1,5 +1,13 @@
 package oscrud
 
+// ContentType Definition
+var (
+	ContentTypePlainText = "text/plain"
+	ContentTypeHTML      = "text/html"
+	ContentTypeJSON      = "application/json"
+	ContentTypeXML       = "application/xml"
+)
+
 // ResultResponse :
 type ResultResponse struct {
 	status      int
@@ -27,7 +35,7 @@ func (c Context) String(status int, text string) Context {
 	c.result = &ResultResponse{
 		status:      status,
 		result:      text,
-		contentType: "text/plain",
+		contentType: ContentTypePlainText,
 	}
 	return c
 }
@@ -37,7 +45,7 @@ func (c Context) HTML(status int, html string) Context {
 	c.result = &ResultResponse{
 		status:      status,
 		result:      html,
-		contentType: "text/html",
+		contentType: ContentTypeHTML,
 	}
 	return c
 }
@@ -47,7 +55,7 @@ func (c Context) JSON(status int, i interface{}) Context {
 	c.result = &ResultResponse{
 		status:      status,
 		result:      i,
-		contentType: "application/json",
+		contentType: ContentTypeJSON,
 	}
 	return c
 }
@@ -57,7 +65,7 @@ func (c Context) XML(status int, i interface{}) Context {
 	c.result = &ResultResponse{
 		status:      status,
 		result:      i,
-		contentType: "application/xml",
+		contentType: ContentTypeXML,
 	}
 	return c
 }

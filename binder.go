@@ -7,13 +7,11 @@ import (
 	"strconv"
 )
 
-// Tag Definitions
 var (
-	QueryTag  = "query"
-	BodyTag   = "body"
-	ParamTag  = "param"
-	HeaderTag = "header"
-	IDTag     = "id"
+	queryTag  = "query"
+	bodyTag   = "body"
+	paramTag  = "param"
+	headerTag = "header"
 )
 
 func bind(header map[string]interface{}, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
@@ -27,7 +25,7 @@ func bind(header map[string]interface{}, param map[string]string, body map[strin
 	for i := 0; i < npt.NumField(); i++ {
 		field := npt.Field(i)
 
-		htag := string(field.Tag.Get(HeaderTag))
+		htag := string(field.Tag.Get(headerTag))
 		if htag != "" && header[htag] != nil {
 			err := bindValue(setter.Field(i), header[htag])
 			if err != nil {
@@ -35,7 +33,7 @@ func bind(header map[string]interface{}, param map[string]string, body map[strin
 			}
 		}
 
-		qtag := string(field.Tag.Get(QueryTag))
+		qtag := string(field.Tag.Get(queryTag))
 		if qtag != "" && query[qtag] != nil {
 			err := bindValue(setter.Field(i), query[qtag])
 			if err != nil {
@@ -43,7 +41,7 @@ func bind(header map[string]interface{}, param map[string]string, body map[strin
 			}
 		}
 
-		btag := string(field.Tag.Get(BodyTag))
+		btag := string(field.Tag.Get(bodyTag))
 		if btag != "" && body[btag] != nil {
 			err := bindValue(setter.Field(i), body[btag])
 			if err != nil {
@@ -51,7 +49,7 @@ func bind(header map[string]interface{}, param map[string]string, body map[strin
 			}
 		}
 
-		ptag := string(field.Tag.Get(ParamTag))
+		ptag := string(field.Tag.Get(paramTag))
 		if ptag != "" && param[ptag] != "" {
 			err := bindValue(setter.Field(i), param[ptag])
 			if err != nil {

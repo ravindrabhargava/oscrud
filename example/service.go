@@ -56,9 +56,7 @@ import (
 
 // Before :
 func Before(ctx oscrud.Context) oscrud.Context {
-
 	log.Println("I'm Before")
-
 	return ctx
 }
 
@@ -73,14 +71,12 @@ func Test2(ctx oscrud.Context) oscrud.Context {
 	err := ctx.Bind(&i)
 	log.Println(i, err)
 	log.Println("You're accessing Endpoint.")
-	return ctx.JSON(200, "Value")
+	return ctx.String(200, "TestValue")
 }
 
 // After :
 func After(ctx oscrud.Context) oscrud.Context {
-
 	log.Println("I'm After")
-
 	return ctx.End()
 }
 
@@ -91,5 +87,6 @@ func main() {
 
 	res, err := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
 	log.Println(res, err)
+
 	server.Start()
 }

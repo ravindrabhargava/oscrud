@@ -81,9 +81,26 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 
 			result, exception := handler(req)
 			if exception != nil {
-				return e.JSON(exception.Status(), exception.Stack())
+				return e.JSON(exception.Status(), exception.ErrorMap())
 			}
-			return e.JSON(result.Status(), result.Result())
+
+			if result.Result() == nil {
+				return e.NoContent(result.Status())
+			}
+			if result.ContentType() == oscrud.ContentTypePlainText {
+				return e.String(result.Status(), result.Result().(string))
+			}
+			if result.ContentType() == oscrud.ContentTypeHTML {
+				return e.HTML(result.Status(), result.Result().(string))
+			}
+			if result.ContentType() == oscrud.ContentTypeXML {
+				return e.XML(result.Status(), result.Result())
+			}
+			if result.ContentType() == oscrud.ContentTypeJSON {
+				return e.JSON(result.Status(), result.Result())
+			}
+			e.Error(oscrud.ErrResponseFailed)
+			return nil
 		},
 	)
 }

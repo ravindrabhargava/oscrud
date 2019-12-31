@@ -31,9 +31,9 @@ func (c ResultResponse) Result() interface{} {
 }
 
 // NoContent :
-func (c Context) NoContent(status int) Context {
+func (c Context) NoContent() Context {
 	c.result = &ResultResponse{
-		status: status,
+		status: 204,
 		result: nil,
 	}
 	return c

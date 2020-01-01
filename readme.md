@@ -52,7 +52,7 @@ $ realize start
 
 You can view more [examples](https://github.com/Oskang09/oscrud/tree/master/example) at `example` folder.
 
-```
+```go
 package main
 
 import (

@@ -14,7 +14,7 @@ var (
 	headerTag = "header"
 )
 
-func bind(header map[string]interface{}, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
+func bind(header map[string]string, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
 		return errors.New("binder interface must be addressable struct")
@@ -25,34 +25,30 @@ func bind(header map[string]interface{}, param map[string]string, body map[strin
 	for i := 0; i < npt.NumField(); i++ {
 		field := npt.Field(i)
 
-		htag := string(field.Tag.Get(headerTag))
-		if htag != "" && header[htag] != nil {
-			err := bindValue(setter.Field(i), header[htag])
-			if err != nil {
+		htag := field.Tag.Get(headerTag)
+		if value, ok := header[htag]; ok {
+			if err := bindValue(setter.Field(i), value); err != nil {
 				return err
 			}
 		}
 
-		qtag := string(field.Tag.Get(queryTag))
-		if qtag != "" && query[qtag] != nil {
-			err := bindValue(setter.Field(i), query[qtag])
-			if err != nil {
+		qtag := field.Tag.Get(queryTag)
+		if value, ok := query[qtag]; ok {
+			if err := bindValue(setter.Field(i), value); err != nil {
 				return err
 			}
 		}
 
-		btag := string(field.Tag.Get(bodyTag))
-		if btag != "" && body[btag] != nil {
-			err := bindValue(setter.Field(i), body[btag])
-			if err != nil {
+		btag := field.Tag.Get(bodyTag)
+		if value, ok := body[btag]; ok {
+			if err := bindValue(setter.Field(i), value); err != nil {
 				return err
 			}
 		}
 
-		ptag := string(field.Tag.Get(paramTag))
-		if ptag != "" && param[ptag] != "" {
-			err := bindValue(setter.Field(i), param[ptag])
-			if err != nil {
+		ptag := field.Tag.Get(paramTag)
+		if value, ok := param[ptag]; ok {
+			if err := bindValue(setter.Field(i), value); err != nil {
 				return err
 			}
 		}

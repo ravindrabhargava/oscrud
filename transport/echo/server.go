@@ -57,12 +57,12 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 				}
 			}
 
-			header := make(map[string]interface{})
+			header := make(map[string]string)
 			for key, value := range e.Request().Header {
 				if len(value) == 1 {
 					header[key] = value[0]
 				} else {
-					header[key] = value
+					header[key] = strings.Join(value, ",")
 				}
 			}
 
@@ -73,7 +73,7 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 			}
 
 			req := oscrud.NewRequest(method, endpoint).
-				Transport("ECHO").
+				Transport(t).
 				SetBody(body).
 				SetQuery(query).
 				SetHeader(header).
@@ -99,8 +99,7 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 			if result.ContentType() == oscrud.ContentTypeJSON {
 				return e.JSON(result.Status(), result.Result())
 			}
-			e.Error(oscrud.ErrResponseFailed)
-			return nil
+			return oscrud.ErrResponseFailed
 		},
 	)
 }

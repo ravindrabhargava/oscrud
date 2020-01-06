@@ -33,7 +33,7 @@ func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
 }
 
 // RegisterEndpoint :
-func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler, opts ...interface{}) *Oscrud {
+func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud {
 	radix := util.RadixPath(method, endpoint)
 	route := &Route{
 		Method:  strings.ToLower(method),
@@ -122,7 +122,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 		if ctx.sent {
 			// EventOptions :
 			if route.OnComplete != nil {
-				go route.OnComplete(ctx.result, ctx.exception)
+				go route.OnComplete(ctx)
 			}
 			return ctx.End()
 		}

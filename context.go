@@ -3,13 +3,13 @@ package oscrud
 // Context :
 type Context struct {
 	method    string
-	transport string
 	path      string
-	header    map[string]interface{}
 	query     map[string]interface{}
 	body      map[string]interface{}
 	param     map[string]string
+	header    map[string]string
 	sent      bool
+	transport Transport
 	result    *ResultResponse
 	exception *ErrorResponse
 }
@@ -20,8 +20,8 @@ func (c Context) GetMethod() string {
 }
 
 // GetTransport :
-func (c Context) GetTransport() string {
-	return "INTERNAL"
+func (c Context) GetTransport() Transport {
+	return c.transport
 }
 
 // GetPath :
@@ -30,7 +30,7 @@ func (c Context) GetPath() string {
 }
 
 // GetHeaders :
-func (c Context) GetHeaders() map[string]interface{} {
+func (c Context) GetHeaders() map[string]string {
 	return c.header
 }
 

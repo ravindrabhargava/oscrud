@@ -11,18 +11,18 @@ var (
 // Request :
 type Request struct {
 	method    string
-	transport string
+	transport Transport
 	path      string
-	header    map[string]interface{}
 	query     map[string]interface{}
 	body      map[string]interface{}
 	param     map[string]string
+	header    map[string]string
 	skip      string
 }
 
 // NewRequest :
 func NewRequest(args ...string) *Request {
-	req := &Request{transport: "INTERNAL", skip: skipNone}
+	req := &Request{transport: nil, skip: skipNone}
 	if len(args) == 2 {
 		req.method = args[0]
 		req.path = args[1]
@@ -49,8 +49,8 @@ func (req *Request) SkipMiddleware() *Request {
 }
 
 // Transport :
-func (req *Request) Transport(transport string) *Request {
-	req.transport = transport
+func (req *Request) Transport(trs Transport) *Request {
+	req.transport = trs
 	return req
 }
 
@@ -73,7 +73,7 @@ func (req *Request) SetQuery(query map[string]interface{}) *Request {
 }
 
 // SetHeader :
-func (req *Request) SetHeader(header map[string]interface{}) *Request {
+func (req *Request) SetHeader(header map[string]string) *Request {
 	req.header = header
 	return req
 }
@@ -85,7 +85,7 @@ func (req *Request) Query(key string, value interface{}) *Request {
 }
 
 // Header :
-func (req *Request) Header(key string, value interface{}) *Request {
+func (req *Request) Header(key string, value string) *Request {
 	req.header[key] = value
 	return req
 }

@@ -3,9 +3,9 @@ module oscrud
 go 1.13
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gbrlsnchs/radix v1.0.0
-	github.com/kr/pretty v0.1.0 // indirect
+	github.com/googollee/go-engine.io v1.4.2
+	github.com/googollee/go-socket.io v1.4.2
 	github.com/labstack/echo/v4 v4.1.11
 	github.com/pkg/errors v0.8.1
 	golang.org/x/crypto v0.0.0-20191108234033-bd318be0434a // indirect

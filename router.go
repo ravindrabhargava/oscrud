@@ -14,6 +14,9 @@ type Route struct {
 	Handler Handler
 }
 
+// Options :
+type Options interface{}
+
 // MiddlewareOptions :
 type MiddlewareOptions struct {
 	Before []Handler
@@ -22,5 +25,5 @@ type MiddlewareOptions struct {
 
 // EventOptions :
 type EventOptions struct {
-	OnComplete func(*ResultResponse, *ErrorResponse)
+	OnComplete func(Context)
 }

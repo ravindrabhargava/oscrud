@@ -1,71 +1,77 @@
 package socketio
 
-// import (
-// 	"fmt"
-// 	"net/http"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"oscrud"
 
-// 	engineio "github.com/googollee/go-engine.io"
-// 	socketio "github.com/googollee/go-socket.io"
-// )
+	engineio "github.com/googollee/go-engine.io"
+	socketio "github.com/googollee/go-socket.io"
+)
 
-// // Transport :
-// type Transport struct {
-// 	Port   int
-// 	Socket *socketio.Server
-// }
+// Transport :
+type Transport struct {
+	Port   int
+	Socket *socketio.Server
+}
 
-// // SocketContext :
-// type SocketContext struct {
-// 	Query  map[string]interface{} `json:"query"`
-// 	Body   map[string]interface{} `json:"body"`
-// 	Header map[string]interface{} `json:"header"`
-// 	Param  map[string]string      `json:"param"`
-// }
+// SocketObject :
+type SocketObject struct {
+	Body   map[string]interface{} `json:"body"`
+	Query  map[string]interface{} `json:"query"`
+	Header map[string]string      `json:"headers"`
+}
 
-// // NewSocket :
-// func NewSocket(opts *engineio.Options) *Transport {
-// 	socket, err := socketio.NewServer(opts)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+// NewSocket :
+func NewSocket(opts *engineio.Options) *Transport {
+	socket, err := socketio.NewServer(opts)
+	if err != nil {
+		panic(err)
+	}
 
-// 	return &Transport{
-// 		Socket: socket,
-// 		Port:   3000,
-// 	}
-// }
+	return &Transport{
+		Socket: socket,
+		Port:   3000,
+	}
+}
 
-// // UsePort :
-// func (t *Transport) UsePort(port int) *Transport {
-// 	t.Port = port
-// 	return t
-// }
+// UsePort :
+func (t *Transport) UsePort(port int) *Transport {
+	t.Port = port
+	return t
+}
 
-// // RegisterService :
-// func (t *Transport) RegisterService(srv string, route service.Route) {
-// 	t.Socket.OnEvent(
-// 		"/", srv+"."+route.Action,
-// 		func(socket socketio.Conn, object string) string {
-// 			return "SERVICE"
-// 		},
-// 	)
-// }
+// Register :
+func (t *Transport) Register(method string, endpoint string, handler oscrud.TransportHandler) {
+	t.Socket.OnEvent(
+		"/", endpoint,
+		func(socket socketio.Conn, object string) string {
+			sobject := new(SocketObject)
+			if err := json.Unmarshal([]byte(object), sobject); err != nil {
+				panic(err)
+			}
 
-// // RegisterEndpoint :
-// func (t *Transport) RegisterEndpoint(endpoint string, route endpoint.Route) {
-// 	t.Socket.OnEvent(
-// 		"/", endpoint,
-// 		func(socket socketio.Conn, object string) string {
-// 			return "ENDPOINT"
-// 		},
-// 	)
-// }
+			req := oscrud.NewRequest(method, endpoint).
+				Transport(t).
+				SetBody(sobject.Body).
+				SetQuery(sobject.Query).
+				SetHeader(sobject.Header)
 
-// // Start :
-// func (t *Transport) Start() error {
-// 	defer t.Socket.Close()
-// 	go t.Socket.Serve()
-// 	http.Handle("/socket.io/", t.Socket)
-// 	port := fmt.Sprintf(":%d", t.Port)
-// 	return http.ListenAndServe(port, nil)
-// }
+			result, exception := handler(req)
+			if exception != nil {
+				return parseError(exception)
+			}
+			return parseResult(result)
+		},
+	)
+}
+
+// Start :
+func (t *Transport) Start(handler oscrud.TransportHandler) error {
+	defer t.Socket.Close()
+	go t.Socket.Serve()
+	http.Handle("/socket.io/", t.Socket)
+	port := fmt.Sprintf(":%d", t.Port)
+	return http.ListenAndServe(port, nil)
+}

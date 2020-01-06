@@ -5,6 +5,7 @@ import (
 	"oscrud"
 
 	ec "oscrud/transport/echo"
+	sc "oscrud/transport/socketio"
 
 	"github.com/labstack/echo/v4"
 )
@@ -90,10 +91,13 @@ func After(ctx oscrud.Context) oscrud.Context {
 
 func main() {
 	server := oscrud.NewOscrud()
-	server.RegisterTransport(ec.NewEcho(echo.New()).UsePort(5001))
+	server.RegisterTransport(
+		ec.NewEcho(echo.New()).UsePort(5001),
+		sc.NewSocket(nil).UsePort(3000),
+	)
 
 	event := oscrud.EventOptions{
-		OnComplete: func(res *oscrud.ResultResponse, response *oscrud.ErrorResponse) {
+		OnComplete: func(ctx oscrud.Context) {
 			log.Println("This running from go-routine as event-drive OnComplete().")
 		},
 	}

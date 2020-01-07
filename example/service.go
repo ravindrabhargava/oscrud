@@ -91,7 +91,18 @@ func After(ctx oscrud.Context) oscrud.Context {
 func main() {
 	server := oscrud.NewOscrud()
 	server.RegisterTransport(ec.NewEcho(echo.New()).UsePort(5001))
-	server.RegisterEndpoint("GET", "/test2/:id/test", Before, Test2, After)
+
+	event := oscrud.EventOptions{
+		OnComplete: func(res *oscrud.ResultResponse, response *oscrud.ErrorResponse) {
+			log.Println("This running from go-routine as event-drive OnComplete().")
+		},
+	}
+	middleware := oscrud.MiddlewareOptions{
+		Before: []oscrud.Handler{Before},
+		After:  []oscrud.Handler{After},
+	}
+
+	server.RegisterEndpoint("GET", "/test2/:id/test", Test2, event, middleware)
 
 	res, err := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
 	log.Println(res, err)

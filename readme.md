@@ -64,56 +64,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// // TestService :
-// type TestService struct {
-// }
-
-// // NewService :
-// func NewService() TestService {
-// 	return TestService{}
-// }
-
-// // Find :
-// func (t TestService) Find(service service.Context) error {
-// 	log.Println("You're accessing TestService.Find")
-// 	return nil
-// }
-
-// // Get :
-// func (t TestService) Get(service service.Context) error {
-// 	log.Println("You're accessing TestService.Get")
-// 	return nil
-// }
-
-// // Create :
-// func (t TestService) Create(service service.Context) error {
-// 	log.Println("You're accessing TestService.Create")
-// 	return nil
-// }
-
-// // Update :
-// func (t TestService) Update(service service.Context) error {
-// 	log.Println("You're accessing TestService.Update")
-// 	return nil
-// }
-
-// // Patch :
-// func (t TestService) Patch(service service.Context) error {
-// 	log.Println("You're accessing TestService.Patch")
-// 	return nil
-// }
-
-// // Remove :
-// func (t TestService) Remove(service service.Context) error {
-// 	log.Println("You're accessing TestService.Remove")
-// 	return nil
-// }
-
 // Before :
 func Before(ctx oscrud.Context) oscrud.Context {
-
 	log.Println("I'm Before")
-
 	return ctx
 }
 
@@ -126,42 +79,61 @@ func Test2(ctx oscrud.Context) oscrud.Context {
 	}
 
 	err := ctx.Bind(&i)
+	if err != nil {
+		return ctx.Stack(500, err)
+	}
+
+	if i.Test0 == 0 {
+		return ctx.Error(500, "ID should bigger than 0")
+	}
+
 	log.Println(i, err)
 	log.Println("You're accessing Endpoint.")
-	return ctx.JSON(200, "Value")
+	return ctx.String(200, "TestValue")
 }
 
 // After :
 func After(ctx oscrud.Context) oscrud.Context {
-
 	log.Println("I'm After")
-
 	return ctx.End()
 }
 
 func main() {
 	server := oscrud.NewOscrud()
-	server.RegisterTransport(
-		ec.NewEcho(echo.New()).UsePort(5001),
-	)
-	server.RegisterEndpoint("GET", "/test2/:id/test", Before, Test2, After)
+	server.RegisterTransport(ec.NewEcho(echo.New()).UsePort(5001))
+
+	event := oscrud.EventOptions{
+		OnComplete: func(res *oscrud.ResultResponse, response *oscrud.ErrorResponse) {
+			log.Println("This running from go-routine as event-drive OnComplete().")
+		},
+	}
+	middleware := oscrud.MiddlewareOptions{
+		Before: []oscrud.Handler{Before},
+		After:  []oscrud.Handler{After},
+	}
+
+	server.RegisterEndpoint("GET", "/test2/:id/test", Test2, event, middleware)
+
+	res, err := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
+	log.Println(res, err)
+
 	server.Start()
 }
 
-
-
 [LOG]
-[00:57:54][OSCRUD] :    ____    __
-[00:57:54][OSCRUD] :   / __/___/ /  ___
-[00:57:54][OSCRUD] :  / _// __/ _ \/ _ \
-[00:57:54][OSCRUD] : /___/\__/_//_/\___/ v4.1.11
-[00:57:54][OSCRUD] : High performance, minimalist Go web framework
-[00:57:54][OSCRUD] : https://echo.labstack.com
-[00:57:54][OSCRUD] : ____________________________________O/_______
-[00:57:54][OSCRUD] :                                     O\
-[00:57:54][OSCRUD] : ⇨ http server started on [::]:5001
-[00:57:57][OSCRUD] : 2019/12/31 00:57:57 I'm Before
-[00:57:57][OSCRUD] : 2019/12/31 00:57:57 {12 123 0} <nil>
-[00:57:57][OSCRUD] : 2019/12/31 00:57:57 You're accessing Endpoint.
-[00:57:57][OSCRUD] : 2019/12/31 00:57:57 I'm After
+[18:49:03][OSCRUD] : 2020/01/07 18:49:03 I'm Before
+[18:49:03][OSCRUD] : 2020/01/07 18:49:03 {1 0 0} <nil>
+[18:49:03][OSCRUD] : 2020/01/07 18:49:03 You're accessing Endpoint.
+[18:49:03][OSCRUD] : 2020/01/07 18:49:03 I'm After
+[18:49:03][OSCRUD] : 2020/01/07 18:49:03 &{200 text/plain TestValue} <nil>
+[18:49:03][OSCRUD] : 2020/01/07 18:49:03 This running from go-routine as event-drive OnComplete().
+[18:49:03][OSCRUD] :    ____    __
+[18:49:03][OSCRUD] :   / __/___/ /  ___
+[18:49:03][OSCRUD] :  / _// __/ _ \/ _ \
+[18:49:03][OSCRUD] : /___/\__/_//_/\___/ v4.1.11
+[18:49:03][OSCRUD] : High performance, minimalist Go web framework
+[18:49:03][OSCRUD] : https://echo.labstack.com
+[18:49:03][OSCRUD] : ____________________________________O/_______
+[18:49:03][OSCRUD] :                                     O\
+[18:49:03][OSCRUD] : ⇨ http server started on [::]:5001
 ```

@@ -2,6 +2,7 @@ package oscrud
 
 import (
 	"oscrud/util"
+	"reflect"
 	"strings"
 
 	"github.com/gbrlsnchs/radix"
@@ -32,12 +33,22 @@ func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
 }
 
 // RegisterEndpoint :
-func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler ...Handler) *Oscrud {
+func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler, opts ...interface{}) *Oscrud {
 	radix := util.RadixPath(method, endpoint)
 	route := &Route{
 		Method:  strings.ToLower(method),
 		Route:   endpoint,
 		Handler: handler,
+	}
+
+	routeElem := reflect.ValueOf(route).Elem()
+	for _, iopt := range opts {
+		name := reflect.TypeOf(iopt).Name()
+		opt := reflect.ValueOf(iopt)
+		field := routeElem.FieldByName(name)
+		if field.CanSet() {
+			field.Set(opt)
+		}
 	}
 
 	server.router.Add(radix, route)
@@ -96,9 +107,23 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 		ctx.param = params
 	}
 
-	for _, handler := range route.Handler {
+	// MiddlewareOptions :
+	handlers := make([]Handler, 0)
+	if req.skip != skipMiddleware && req.skip != skipBefore && route.Before != nil {
+		handlers = append(handlers, route.Before...)
+	}
+	handlers = append(handlers, route.Handler)
+	if req.skip != skipMiddleware && req.skip != skipAfter && route.After != nil {
+		handlers = append(handlers, route.After...)
+	}
+
+	for _, handler := range handlers {
 		ctx = handler(ctx)
 		if ctx.sent {
+			// EventOptions :
+			if route.OnComplete != nil {
+				go route.OnComplete(ctx.result, ctx.exception)
+			}
 			return ctx.End()
 		}
 	}

@@ -1,5 +1,13 @@
 package oscrud
 
+// Request Skip Definition
+var (
+	skipMiddleware = "ALL"
+	skipBefore     = "BEFORE"
+	skipAfter      = "AFTER"
+	skipNone       = "NONE"
+)
+
 // Request :
 type Request struct {
 	method    string
@@ -9,15 +17,34 @@ type Request struct {
 	query     map[string]interface{}
 	body      map[string]interface{}
 	param     map[string]string
+	skip      string
 }
 
 // NewRequest :
 func NewRequest(args ...string) *Request {
-	req := &Request{transport: "INTERNAL"}
+	req := &Request{transport: "INTERNAL", skip: skipNone}
 	if len(args) == 2 {
 		req.method = args[0]
 		req.path = args[1]
 	}
+	return req
+}
+
+// SkipAfter :
+func (req *Request) SkipAfter() *Request {
+	req.skip = skipAfter
+	return req
+}
+
+// SkipBefore :
+func (req *Request) SkipBefore() *Request {
+	req.skip = skipBefore
+	return req
+}
+
+// SkipMiddleware :
+func (req *Request) SkipMiddleware() *Request {
+	req.skip = skipMiddleware
 	return req
 }
 

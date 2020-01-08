@@ -27,10 +27,6 @@ Current is what i planned to achive in version one of the framework.
 
 * Single Action
 
-# Context
-
-* Get & Set ( map[string]interface{} )
-
 ### Middleware
 
 * Before & After
@@ -118,11 +114,11 @@ func main() {
 
 	server.RegisterEndpoint("GET", "/test2/:id/test", Test2, event, middleware)
 
-	res, err := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
-	log.Println(res, err)
+	res := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
+	log.Println(res.Result(), res.Error())
 
-	res, err = server.Endpoint("GET", "/test2/0/test", oscrud.NewRequest())
-	log.Println(res, err)
+	res = server.Endpoint("GET", "/test2/0/test", oscrud.NewRequest())
+	log.Println(res.Result(), res.Error())
 
 	server.Start()
 }

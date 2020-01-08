@@ -109,10 +109,10 @@ func main() {
 	server.RegisterEndpoint("GET", "/test2/:id/test", Test2, event, middleware)
 
 	res := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
-	log.Println(res)
+	log.Println(res.Result(), res.Error())
 
 	res = server.Endpoint("GET", "/test2/0/test", oscrud.NewRequest())
-	log.Println(res)
+	log.Println(res.Result(), res.Error())
 
 	server.Start()
 }

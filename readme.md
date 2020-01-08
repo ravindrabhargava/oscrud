@@ -60,6 +60,7 @@ import (
 	"oscrud"
 
 	ec "oscrud/transport/echo"
+	sc "oscrud/transport/socketio"
 
 	"github.com/labstack/echo/v4"
 )
@@ -100,10 +101,13 @@ func After(ctx oscrud.Context) oscrud.Context {
 
 func main() {
 	server := oscrud.NewOscrud()
-	server.RegisterTransport(ec.NewEcho(echo.New()).UsePort(5001))
+	server.RegisterTransport(
+		ec.NewEcho(echo.New()).UsePort(5001),
+		sc.NewSocket(nil).UsePort(3000),
+	)
 
 	event := oscrud.EventOptions{
-		OnComplete: func(res *oscrud.ResultResponse, response *oscrud.ErrorResponse) {
+		OnComplete: func(ctx oscrud.Context) {
 			log.Println("This running from go-routine as event-drive OnComplete().")
 		},
 	}
@@ -117,23 +121,31 @@ func main() {
 	res, err := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
 	log.Println(res, err)
 
+	res, err = server.Endpoint("GET", "/test2/0/test", oscrud.NewRequest())
+	log.Println(res, err)
+
 	server.Start()
 }
 
+
 [LOG]
-[18:49:03][OSCRUD] : 2020/01/07 18:49:03 I'm Before
-[18:49:03][OSCRUD] : 2020/01/07 18:49:03 {1 0 0} <nil>
-[18:49:03][OSCRUD] : 2020/01/07 18:49:03 You're accessing Endpoint.
-[18:49:03][OSCRUD] : 2020/01/07 18:49:03 I'm After
-[18:49:03][OSCRUD] : 2020/01/07 18:49:03 &{200 text/plain TestValue} <nil>
-[18:49:03][OSCRUD] : 2020/01/07 18:49:03 This running from go-routine as event-drive OnComplete().
-[18:49:03][OSCRUD] :    ____    __
-[18:49:03][OSCRUD] :   / __/___/ /  ___
-[18:49:03][OSCRUD] :  / _// __/ _ \/ _ \
-[18:49:03][OSCRUD] : /___/\__/_//_/\___/ v4.1.11
-[18:49:03][OSCRUD] : High performance, minimalist Go web framework
-[18:49:03][OSCRUD] : https://echo.labstack.com
-[18:49:03][OSCRUD] : ____________________________________O/_______
-[18:49:03][OSCRUD] :                                     O\
-[18:49:03][OSCRUD] : ⇨ http server started on [::]:5001
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 I'm Before
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 {1 0 0} <nil>
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 You're accessing Endpoint.
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 I'm After
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 &{200 text/plain TestValue} <nil>
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 I'm After
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 <nil> &{500 <nil> ID should bigger than 0}
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 This running from go-routine as event-drive OnComplete().
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 This running from go-routine as event-drive OnComplete().
+[11:36:53][OSCRUD] :    ____    __
+[11:36:53][OSCRUD] :   / __/___/ /  ___
+[11:36:53][OSCRUD] :  / _// __/ _ \/ _ \
+[11:36:53][OSCRUD] : /___/\__/_//_/\___/ v4.1.11
+[11:36:53][OSCRUD] : High performance, minimalist Go web framework
+[11:36:53][OSCRUD] : https://echo.labstack.com
+[11:36:53][OSCRUD] : ____________________________________O/_______
+[11:36:53][OSCRUD] : 2020/01/08 11:36:53 I'm Before
+[11:36:53][OSCRUD] :                                     O\
+[11:36:53][OSCRUD] : ⇨ http server started on [::]:5001
 ```

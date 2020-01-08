@@ -10,6 +10,9 @@ import (
 
 // Oscrud :
 type Oscrud struct {
+	MiddlewareOptions
+	EventOptions
+
 	transports []Transport
 	router     *radix.Tree
 }
@@ -22,6 +25,20 @@ func NewOscrud() *Oscrud {
 		transports: make([]Transport, 0),
 		router:     tree,
 	}
+}
+
+// UseOptions :
+func (server *Oscrud) UseOptions(opts ...Options) *Oscrud {
+	serverElem := reflect.ValueOf(server).Elem()
+	for _, iopt := range opts {
+		name := reflect.TypeOf(iopt).Name()
+		opt := reflect.ValueOf(iopt)
+		field := serverElem.FieldByName(name)
+		if field.CanSet() {
+			field.Set(opt)
+		}
+	}
+	return server
 }
 
 // RegisterTransport :
@@ -55,9 +72,13 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 	for _, transport := range server.transports {
 		transport.Register(
 			method, endpoint,
-			func(req *Request) (*ResultResponse, *ErrorResponse) {
+			func(req *Request) TransportResponse {
 				ctx := server.lookupHandler(route, req)
-				return ctx.result, ctx.exception
+				return TransportResponse{
+					Result:  ctx.result,
+					Error:   ctx.exception,
+					Headers: ctx.responseHeaders,
+				}
 			},
 		)
 	}
@@ -69,9 +90,13 @@ func (server *Oscrud) Start() {
 	for _, trs := range server.transports {
 		go func(t Transport) {
 			err := t.Start(
-				func(req *Request) (*ResultResponse, *ErrorResponse) {
+				func(req *Request) TransportResponse {
 					ctx := server.lookupHandler(nil, req)
-					return ctx.result, ctx.exception
+					return TransportResponse{
+						Result:  ctx.result,
+						Error:   ctx.exception,
+						Headers: ctx.responseHeaders,
+					}
 				},
 			)
 			if err != nil {
@@ -110,11 +135,13 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	// MiddlewareOptions :
 	handlers := make([]Handler, 0)
 	if req.skip != skipMiddleware && req.skip != skipBefore && route.Before != nil {
+		handlers = append(handlers, server.Before...)
 		handlers = append(handlers, route.Before...)
 	}
 	handlers = append(handlers, route.Handler)
 	if req.skip != skipMiddleware && req.skip != skipAfter && route.After != nil {
 		handlers = append(handlers, route.After...)
+		handlers = append(handlers, server.After...)
 	}
 
 	for _, handler := range handlers {
@@ -124,6 +151,11 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 			if route.OnComplete != nil {
 				go route.OnComplete(ctx)
 			}
+
+			if server.OnComplete != nil {
+				go server.OnComplete(ctx)
+			}
+
 			return ctx.End()
 		}
 	}

@@ -79,7 +79,16 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 				SetHeader(header).
 				SetParam(param)
 
-			result, exception := handler(req)
+			response := handler(req)
+
+			result := response.Result
+			exception := response.Error
+			headers := response.Headers
+
+			for key, val := range headers {
+				e.Response().Header().Add(key, val)
+			}
+
 			if exception != nil {
 				return e.JSON(exception.Status(), exception.ErrorMap())
 			}

@@ -44,33 +44,59 @@ func (t *Transport) UsePort(port int) *Transport {
 
 // Register :
 func (t *Transport) Register(method string, endpoint string, handler oscrud.TransportHandler) {
-	t.Socket.OnEvent(
-		"/", endpoint,
-		func(socket socketio.Conn, object string) string {
-			sobject := new(SocketObject)
-			if err := json.Unmarshal([]byte(object), sobject); err != nil {
-				panic(err)
-			}
+	// log.Println(endpoint)
+	// t.Socket.OnEvent(
+	// 	"/", endpoint,
+	// 	func(socket socketio.Conn, object string) string {
+	// 		sobject := new(SocketObject)
+	// 		if err := json.Unmarshal([]byte(object), sobject); err != nil {
+	// 			panic(err)
+	// 		}
 
-			req := oscrud.NewRequest(method, endpoint).
-				Transport(t).
-				SetBody(sobject.Body).
-				SetQuery(sobject.Query).
-				SetHeader(sobject.Header)
+	// 		req := oscrud.NewRequest(method, endpoint).
+	// 			Transport(t).
+	// 			Context(socket).
+	// 			SetBody(sobject.Body).
+	// 			SetQuery(sobject.Query).
+	// 			SetHeader(sobject.Header)
 
-			result, exception := handler(req)
-			if exception != nil {
-				return parseError(exception)
-			}
-			return parseResult(result)
-		},
-	)
+	// 		result, exception := handler(req)
+	// 		if exception != nil {
+	// 			return parseError(exception)
+	// 		}
+	// 		return parseResult(result)
+	// 	},
+	// )
 }
 
 // Start :
 func (t *Transport) Start(handler oscrud.TransportHandler) error {
 	defer t.Socket.Close()
 	go t.Socket.Serve()
+
+	t.Socket.OnEvent(
+		"/", "endpoint",
+		func(socket socketio.Conn, endpoint string, object string) string {
+			sobject := new(SocketObject)
+			if err := json.Unmarshal([]byte(object), sobject); err != nil {
+				panic(err)
+			}
+
+			req := oscrud.NewRequest("*", endpoint).
+				Transport(t).
+				Context(socket).
+				SetBody(sobject.Body).
+				SetQuery(sobject.Query).
+				SetHeader(sobject.Header)
+
+			response := handler(req)
+			if response.Error != nil {
+				return parseError(response.Headers, response.Error)
+			}
+			return parseResult(response.Headers, response.Result)
+		},
+	)
+
 	http.Handle("/socket.io/", t.Socket)
 	port := fmt.Sprintf(":%d", t.Port)
 	return http.ListenAndServe(port, nil)

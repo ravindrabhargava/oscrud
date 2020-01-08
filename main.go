@@ -74,11 +74,7 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 			method, endpoint,
 			func(req *Request) TransportResponse {
 				ctx := server.lookupHandler(route, req)
-				return TransportResponse{
-					Result:  ctx.result,
-					Error:   ctx.exception,
-					Headers: ctx.responseHeaders,
-				}
+				return ctx.transportResponse()
 			},
 		)
 	}
@@ -92,11 +88,7 @@ func (server *Oscrud) Start() {
 			err := t.Start(
 				func(req *Request) TransportResponse {
 					ctx := server.lookupHandler(nil, req)
-					return TransportResponse{
-						Result:  ctx.result,
-						Error:   ctx.exception,
-						Headers: ctx.responseHeaders,
-					}
+					return ctx.transportResponse()
 				},
 			)
 			if err != nil {

@@ -81,32 +81,28 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 
 			response := handler(req)
 
-			result := response.Result
-			exception := response.Error
-			headers := response.Headers
-
-			for key, val := range headers {
+			for key, val := range response.Headers() {
 				e.Response().Header().Add(key, val)
 			}
 
-			if exception != nil {
-				return e.JSON(exception.Status(), exception.ErrorMap())
+			if response.Error() != nil {
+				return e.JSON(response.Status(), response.ErrorMap())
 			}
 
-			if result.Result() == nil {
-				return e.NoContent(result.Status())
+			if response.Result() == nil {
+				return e.NoContent(response.Status())
 			}
-			if result.ContentType() == oscrud.ContentTypePlainText {
-				return e.String(result.Status(), result.Result().(string))
+			if response.ContentType() == oscrud.ContentTypePlainText {
+				return e.String(response.Status(), response.Result().(string))
 			}
-			if result.ContentType() == oscrud.ContentTypeHTML {
-				return e.HTML(result.Status(), result.Result().(string))
+			if response.ContentType() == oscrud.ContentTypeHTML {
+				return e.HTML(response.Status(), response.Result().(string))
 			}
-			if result.ContentType() == oscrud.ContentTypeXML {
-				return e.XML(result.Status(), result.Result())
+			if response.ContentType() == oscrud.ContentTypeXML {
+				return e.XML(response.Status(), response.Result())
 			}
-			if result.ContentType() == oscrud.ContentTypeJSON {
-				return e.JSON(result.Status(), result.Result())
+			if response.ContentType() == oscrud.ContentTypeJSON {
+				return e.JSON(response.Status(), response.Result())
 			}
 			return oscrud.ErrResponseFailed
 		},

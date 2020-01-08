@@ -8,83 +8,49 @@ var (
 	ContentTypeXML       = "application/xml"
 )
 
-// ResultResponse :
-type ResultResponse struct {
-	status      int
-	contentType string
-	result      interface{}
-}
-
-// Status :
-func (c ResultResponse) Status() int {
-	return c.status
-}
-
-// ContentType :
-func (c ResultResponse) ContentType() string {
-	return c.contentType
-}
-
-// Result :
-func (c ResultResponse) Result() interface{} {
-	return c.result
-}
-
 // NoContent :
 func (c Context) NoContent() Context {
-	c.result = &ResultResponse{
-		status: 204,
-		result: nil,
-	}
+	c.status = 204
+	c.result = nil
 	return c
 }
 
 // String :
 func (c Context) String(status int, text string) Context {
-	c.result = &ResultResponse{
-		status:      status,
-		result:      text,
-		contentType: ContentTypePlainText,
-	}
+	c.status = status
+	c.result = text
+	c.contentType = ContentTypePlainText
 	return c
 }
 
 // HTML :
 func (c Context) HTML(status int, html string) Context {
-	c.result = &ResultResponse{
-		status:      status,
-		result:      html,
-		contentType: ContentTypeHTML,
-	}
+	c.status = status
+	c.result = html
+	c.contentType = ContentTypeHTML
 	return c
 }
 
 // JSON :
 func (c Context) JSON(status int, i interface{}) Context {
-	c.result = &ResultResponse{
-		status:      status,
-		result:      i,
-		contentType: ContentTypeJSON,
-	}
+	c.status = status
+	c.result = i
+	c.contentType = ContentTypeJSON
 	return c
 }
 
 // XML :
 func (c Context) XML(status int, i interface{}) Context {
-	c.result = &ResultResponse{
-		status:      status,
-		result:      i,
-		contentType: ContentTypeXML,
-	}
+	c.status = status
+	c.result = i
+	c.contentType = ContentTypeXML
 	return c
 }
 
 // Send :
 func (c Context) Send(status int, contentType string, i interface{}) Context {
-	c.result = &ResultResponse{
-		status:      status,
-		result:      i,
-		contentType: contentType,
-	}
+	c.status = status
+	c.result = i
+	c.contentType = contentType
 	return c
 }

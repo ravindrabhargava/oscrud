@@ -2,22 +2,35 @@ package oscrud
 
 // Context :
 type Context struct {
-	method          string
-	path            string
-	query           map[string]interface{}
-	body            map[string]interface{}
-	param           map[string]string
-	header          map[string]string
+	method    string
+	path      string
+	query     map[string]interface{}
+	body      map[string]interface{}
+	param     map[string]string
+	header    map[string]string
+	context   interface{}
+	transport Transport
+
 	sent            bool
-	context         interface{}
-	transport       Transport
+	contentType     string
 	responseHeaders map[string]string
-	result          *ResultResponse
-	exception       *ErrorResponse
+	status          int
+	exception       error
+	result          interface{}
 }
 
-// GetMethod :
-func (c Context) GetMethod() string {
+func (c Context) transportResponse() TransportResponse {
+	return TransportResponse{
+		contentType:     c.contentType,
+		responseHeaders: c.responseHeaders,
+		status:          c.status,
+		exception:       c.exception,
+		result:          c.result,
+	}
+}
+
+// Method :
+func (c Context) Method() string {
 	return c.method
 }
 

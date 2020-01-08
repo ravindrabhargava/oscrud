@@ -5,28 +5,28 @@ import (
 	"oscrud"
 )
 
-func parseError(headers map[string]string, exception *oscrud.ErrorResponse) string {
-	errJSON, err := json.Marshal(
-		map[string]interface{}{
-			"status":  exception.Status(),
-			"error":   exception.ErrorMap(),
-			"headers": headers,
-		},
-	)
-	if err != nil {
-		return err.Error()
-	}
-	return string(errJSON)
-}
+func parseResponse(response oscrud.TransportResponse) string {
 
-func parseResult(headers map[string]string, result *oscrud.ResultResponse) string {
-	resJSON := map[string]interface{}{
-		"status":  result.Status(),
-		"headers": headers,
+	if response.Error() != nil {
+		errJSON, err := json.Marshal(
+			map[string]interface{}{
+				"status":  response.Status(),
+				"error":   response.ErrorMap(),
+				"headers": response.Headers(),
+			},
+		)
+		if err != nil {
+			return err.Error()
+		}
+		return string(errJSON)
 	}
-	switch result.ContentType() {
+	resJSON := map[string]interface{}{
+		"status":  response.Status(),
+		"headers": response.Headers(),
+	}
+	switch response.ContentType() {
 	case oscrud.ContentTypeJSON:
-		resJSON["result"] = result.Result()
+		resJSON["result"] = response.Result()
 		res, err := json.Marshal(resJSON)
 		if err != nil {
 			return err.Error()

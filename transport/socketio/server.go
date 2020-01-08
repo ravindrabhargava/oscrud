@@ -90,10 +90,7 @@ func (t *Transport) Start(handler oscrud.TransportHandler) error {
 				SetHeader(sobject.Header)
 
 			response := handler(req)
-			if response.Error != nil {
-				return parseError(response.Headers, response.Error)
-			}
-			return parseResult(response.Headers, response.Result)
+			return parseResponse(response)
 		},
 	)
 

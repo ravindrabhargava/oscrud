@@ -18,6 +18,7 @@ type Request struct {
 	param     map[string]string
 	header    map[string]string
 	skip      string
+	context   interface{}
 }
 
 // NewRequest :
@@ -51,6 +52,12 @@ func (req *Request) SkipMiddleware() *Request {
 // Transport :
 func (req *Request) Transport(trs Transport) *Request {
 	req.transport = trs
+	return req
+}
+
+// Context :
+func (req *Request) Context(ctx interface{}) *Request {
+	req.context = ctx
 	return req
 }
 

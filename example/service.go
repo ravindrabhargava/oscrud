@@ -111,5 +111,8 @@ func main() {
 	res, err := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
 	log.Println(res, err)
 
+	res, err = server.Endpoint("GET", "/test2/0/test", oscrud.NewRequest())
+	log.Println(res, err)
+
 	server.Start()
 }

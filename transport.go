@@ -21,6 +21,7 @@ type TransportHandler func(req *Request) TransportResponse
 type Transport interface {
 	Register(string, string, TransportHandler)
 	Start(TransportHandler) error
+	Name() string
 }
 
 // ContentType :

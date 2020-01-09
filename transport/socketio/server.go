@@ -10,6 +10,11 @@ import (
 	socketio "github.com/googollee/go-socket.io"
 )
 
+// Transport Definition
+var (
+	TransportName = "SOCKETIO"
+)
+
 // Transport :
 type Transport struct {
 	Port   int
@@ -40,6 +45,11 @@ func NewSocket(opts *engineio.Options) *Transport {
 func (t *Transport) UsePort(port int) *Transport {
 	t.Port = port
 	return t
+}
+
+// Name :
+func (t *Transport) Name() string {
+	return TransportName
 }
 
 // Register :

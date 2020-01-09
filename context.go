@@ -68,8 +68,11 @@ func (c Context) Context() interface{} {
 }
 
 // Transport :
-func (c Context) Transport() Transport {
-	return c.transport
+func (c Context) Transport() string {
+	if c.transport == nil {
+		return ""
+	}
+	return c.transport.Name()
 }
 
 // Path :

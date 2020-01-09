@@ -10,6 +10,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// Transport Definition
+var (
+	TransportName = "ECHO"
+)
+
 // Transport :
 type Transport struct {
 	Port int
@@ -28,6 +33,11 @@ func NewEcho(echo *echo.Echo) *Transport {
 func (t *Transport) UsePort(port int) *Transport {
 	t.Port = port
 	return t
+}
+
+// Name :
+func (t *Transport) Name() string {
+	return TransportName
 }
 
 // Register :

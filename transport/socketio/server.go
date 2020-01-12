@@ -54,29 +54,7 @@ func (t *Transport) Name() string {
 
 // Register :
 func (t *Transport) Register(method string, endpoint string, handler oscrud.TransportHandler) {
-	// log.Println(endpoint)
-	// t.Socket.OnEvent(
-	// 	"/", endpoint,
-	// 	func(socket socketio.Conn, object string) string {
-	// 		sobject := new(SocketObject)
-	// 		if err := json.Unmarshal([]byte(object), sobject); err != nil {
-	// 			panic(err)
-	// 		}
 
-	// 		req := oscrud.NewRequest(method, endpoint).
-	// 			Transport(t).
-	// 			Context(socket).
-	// 			SetBody(sobject.Body).
-	// 			SetQuery(sobject.Query).
-	// 			SetHeader(sobject.Header)
-
-	// 		result, exception := handler(req)
-	// 		if exception != nil {
-	// 			return parseError(exception)
-	// 		}
-	// 		return parseResult(result)
-	// 	},
-	// )
 }
 
 // Start :

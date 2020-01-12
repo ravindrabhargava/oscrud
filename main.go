@@ -1,7 +1,6 @@
 package oscrud
 
 import (
-	"oscrud/util"
 	"reflect"
 	"strings"
 
@@ -51,7 +50,7 @@ func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
 
 // RegisterEndpoint :
 func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud {
-	radix := util.RadixPath(method, endpoint)
+	radix := radixPath(method, endpoint)
 	route := &Route{
 		Method:  strings.ToLower(method),
 		Route:   endpoint,
@@ -70,27 +69,33 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 
 	server.router.Add(radix, route)
 	for _, transport := range server.transports {
-		transport.Register(
-			method, endpoint,
-			func(req *Request) TransportResponse {
-				ctx := server.lookupHandler(route, req)
-				return ctx.transportResponse()
-			},
-		)
+		transport.Register(method, endpoint, server.transportHandler(route))
 	}
 	return server
+}
+
+// RegisterService :
+func (server *Oscrud) RegisterService(basePath string, service Service) *Oscrud {
+	path := fixPath(basePath)
+	route := &Route{
+		Method:  "get",
+		Route:   path,
+		Handler: service.Find,
+	}
+
+	server.router.Add(radixPath("get", path), route)
+	for _, transport := range server.transports {
+		transport.Register("get", path, server.transportHandler(route))
+	}
+	return server
+
 }
 
 // Start :
 func (server *Oscrud) Start() {
 	for _, trs := range server.transports {
 		go func(t Transport) {
-			err := t.Start(
-				func(req *Request) TransportResponse {
-					ctx := server.lookupHandler(nil, req)
-					return ctx.transportResponse()
-				},
-			)
+			err := t.Start(server.transportHandler(nil))
 			if err != nil {
 				panic(err)
 			}
@@ -99,7 +104,13 @@ func (server *Oscrud) Start() {
 	select {}
 }
 
-// lookupHandler :
+func (server *Oscrud) transportHandler(route *Route) TransportHandler {
+	return func(req *Request) TransportResponse {
+		ctx := server.lookupHandler(route, req)
+		return ctx.transportResponse()
+	}
+}
+
 func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	ctx := Context{
 		method:    req.method,
@@ -115,7 +126,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	}
 
 	if route == nil {
-		node, params := server.router.Get(util.RadixPath(req.method, req.path))
+		node, params := server.router.Get(radixPath(req.method, req.path))
 		if node == nil {
 			return ctx.NotFound().End()
 		}
@@ -153,4 +164,20 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	}
 
 	return ctx.missingEnd().End()
+}
+
+func radixPath(method, path string) string {
+	return strings.ToLower(method) + fixPath(path)
+}
+
+func fixPath(path string) string {
+	if !strings.HasPrefix(path, "/") {
+		path = "/" + path
+	}
+
+	if strings.HasSuffix(path, "/") {
+		path = strings.TrimSuffix(path, "/")
+	}
+
+	return path
 }

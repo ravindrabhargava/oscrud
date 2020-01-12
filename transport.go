@@ -52,12 +52,7 @@ func (t TransportResponse) Result() interface{} {
 // ErrorMap :
 func (t TransportResponse) ErrorMap() map[string]interface{} {
 	err := make(map[string]interface{})
-	if t.exception != nil {
-		err["message"] = t.exception.Error()
-		err["stack"] = strings.Split(strings.ReplaceAll(fmt.Sprintf("%+v", t.exception), "\t", ""), "\n")
-	}
-	if t.result != nil {
-		err["error"] = t.result
-	}
+	err["error"] = t.exception.Error()
+	err["stack"] = strings.Split(strings.ReplaceAll(fmt.Sprintf("%+v", t.exception), "\t", ""), "\n")[2:]
 	return err
 }

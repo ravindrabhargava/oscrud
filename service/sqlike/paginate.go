@@ -10,7 +10,6 @@ import (
 	"github.com/si3nloong/sqlike/sqlike/actions"
 	"github.com/si3nloong/sqlike/sqlike/options"
 	"github.com/si3nloong/sqlike/sqlike/primitive"
-	"github.com/si3nloong/sqlike/types"
 )
 
 // Definition
@@ -55,8 +54,7 @@ func (p *Paginator) GetResult(table *sqlike.Table, result interface{}) error {
 	query = query.Select(selects...)
 	query = query.Where(buildExprs(p.Query)...)
 	for key, value := range p.Order {
-		order := strings.ToLower(value)
-		if order == OrderByDescending {
+		if value == OrderByDescending {
 			query = query.OrderBy(expr.Desc(key))
 		} else {
 			query = query.OrderBy(expr.Asc(key))
@@ -69,12 +67,7 @@ func (p *Paginator) GetResult(table *sqlike.Table, result interface{}) error {
 	}
 
 	if p.Cursor != "" {
-		decodeCursor, err := types.DecodeKey(p.Cursor)
-		if err != nil {
-			return err
-		}
-
-		if err = paginator.NextPage(decodeCursor); err != nil {
+		if err := paginator.NextPage(p.Cursor); err != nil {
 			return err
 		}
 	}
@@ -86,9 +79,9 @@ func (p *Paginator) GetResult(table *sqlike.Table, result interface{}) error {
 
 	slice = slice.Elem()
 	if v := slice.Len(); v > p.Limit {
-		key := slice.Index(v - 1).Elem().FieldByName("Key")
+		key := slice.Index(v - 2).Elem().FieldByName("Key")
 		if key.CanInterface() {
-			p.Cursor = key.Interface().(*types.Key).Encode()
+			p.Cursor = fmt.Sprintf("%v", key.Interface())
 			slice.Set(slice.Slice(0, v-1))
 		}
 	} else {

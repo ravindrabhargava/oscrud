@@ -14,7 +14,51 @@ var (
 	headerTag = "header"
 )
 
-func bind(header map[string]string, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
+func (c Context) bindAll(assign interface{}) error {
+	t := reflect.TypeOf(assign)
+	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
+		return errors.New("binder interface must be addressable struct")
+	}
+
+	setter := reflect.ValueOf(assign).Elem()
+	npt := t.Elem()
+	for i := 0; i < npt.NumField(); i++ {
+		field := npt.Field(i)
+		json := field.Tag.Get("json")
+		if json != "" {
+			if value, ok := c.header[json]; ok {
+				if err := bindValue(setter.Field(i), value); err != nil {
+					return err
+				}
+				continue
+			}
+
+			if value, ok := c.query[json]; ok {
+				if err := bindValue(setter.Field(i), value); err != nil {
+					return err
+				}
+				continue
+			}
+
+			if value, ok := c.body[json]; ok {
+				if err := bindValue(setter.Field(i), value); err != nil {
+					return err
+				}
+				continue
+			}
+
+			if value, ok := c.param[json]; ok {
+				if err := bindValue(setter.Field(i), value); err != nil {
+					return err
+				}
+				continue
+			}
+		}
+	}
+	return nil
+}
+
+func (c Context) bind(assign interface{}) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
 		return errors.New("binder interface must be addressable struct")
@@ -26,31 +70,35 @@ func bind(header map[string]string, param map[string]string, body map[string]int
 		field := npt.Field(i)
 
 		htag := field.Tag.Get(headerTag)
-		if value, ok := header[htag]; ok {
+		if value, ok := c.header[htag]; ok {
 			if err := bindValue(setter.Field(i), value); err != nil {
 				return err
 			}
+			continue
 		}
 
 		qtag := field.Tag.Get(queryTag)
-		if value, ok := query[qtag]; ok {
+		if value, ok := c.query[qtag]; ok {
 			if err := bindValue(setter.Field(i), value); err != nil {
 				return err
 			}
+			continue
 		}
 
 		btag := field.Tag.Get(bodyTag)
-		if value, ok := body[btag]; ok {
+		if value, ok := c.body[btag]; ok {
 			if err := bindValue(setter.Field(i), value); err != nil {
 				return err
 			}
+			continue
 		}
 
 		ptag := field.Tag.Get(paramTag)
-		if value, ok := param[ptag]; ok {
+		if value, ok := c.param[ptag]; ok {
 			if err := bindValue(setter.Field(i), value); err != nil {
 				return err
 			}
+			continue
 		}
 	}
 	return nil
@@ -89,7 +137,7 @@ func bindValue(field reflect.Value, value interface{}) error {
 	case reflect.String:
 		result := fmt.Sprintf("%v", value)
 		if !field.CanSet() {
-			return fmt.Errorf("Trying to BindValue() on unexported field")
+			return fmt.Errorf("Trying to bindValue() on unexported field")
 		}
 		field.SetString(result)
 	case reflect.Bool:
@@ -99,7 +147,7 @@ func bindValue(field reflect.Value, value interface{}) error {
 			return fmt.Errorf("Trying to convert %v to bool", value)
 		}
 		if !field.CanSet() {
-			return fmt.Errorf("Trying to BindValue() on unexported field")
+			return fmt.Errorf("Trying to bindValue() on unexported field")
 		}
 		field.SetBool(result)
 		break
@@ -109,7 +157,7 @@ func bindValue(field reflect.Value, value interface{}) error {
 			return fmt.Errorf("Trying to convert %v to %v", value, field.Addr().Type())
 		}
 		if !field.CanSet() {
-			return fmt.Errorf("Trying to BindValue() on unexported field")
+			return fmt.Errorf("Trying to bindValue() on unexported field")
 		}
 		field.Set(reflect.ValueOf(value))
 		break

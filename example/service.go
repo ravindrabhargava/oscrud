@@ -83,7 +83,7 @@ func main() {
 			SetPassword("test"),
 	)
 	client.SetPrimaryKey("Key")
-	service := sqlike.NewService(client).Database("rm_membership")
-	server.RegisterService("test", service.ToService("storeprofile"))
+	service := sqlike.NewService(client).Database("test")
+	server.RegisterService("test", service.ToService("user", new(User)))
 	server.Start()
 }

@@ -2,11 +2,10 @@ package sqlike
 
 import (
 	"oscrud"
+	"reflect"
 	"strings"
-	"time"
 
 	sql "github.com/si3nloong/sqlike/sqlike"
-	"github.com/si3nloong/sqlike/types"
 )
 
 // Sqlike :
@@ -27,7 +26,7 @@ func (service *Sqlike) Database(db string) *Sqlike {
 }
 
 // ToService :
-func (service *Sqlike) ToService(table string) Service {
+func (service *Sqlike) ToService(table string, model oscrud.ServiceModel) Service {
 	if service.database == nil {
 		panic("You set database by `Database()` before transform to service.")
 	}
@@ -35,6 +34,7 @@ func (service *Sqlike) ToService(table string) Service {
 		service.client,
 		service.database,
 		service.database.Table(table),
+		model,
 	}
 }
 
@@ -43,73 +43,58 @@ type Service struct {
 	client   *sql.Client
 	database *sql.Database
 	table    *sql.Table
-}
-
-// StoreProfile :
-type StoreProfile struct {
-	Key             *types.Key `json:"id"`
-	StoreRefID      string     `json:"storeId"`
-	MerchantRefID   string     `json:"merchantId"`
-	CategoryID      []string   `json:"categoryId"`
-	CardID          []string   `json:"cardId"`
-	CoverImageURL   string     `json:"coverImg"`
-	LogoURL         string     `json:"logo"`
-	Description     []string   `json:"desc"`
-	TnC             []string   `json:"tnc"`
-	Status          string     `json:"status"`
-	Operation       []string   `json:"operation"`
-	CreatedDateTime time.Time  `json:"createdAt"`
-	UpdatedDateTime time.Time  `json:"updatedAt"`
+	model    oscrud.ServiceModel
 }
 
 // Find :
 func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 
-	var i struct {
-		Cursor string `query:"$cursor"`
-		Offset int    `query:"$offset"`
-		Page   int    `query:"$page"`
-		Limit  int    `query:"$limit"`
-		Order  string `query:"$order"`
-		Select string `query:"$select"`
-	}
-
-	if err := ctx.Bind(&i); err != nil {
+	query := new(oscrud.Query)
+	if err := ctx.Bind(query); err != nil {
 		return ctx.Stack(500, err).End()
 	}
 
+	qm := reflect.New(reflect.TypeOf(service.model).Elem())
+	if err := ctx.BindAll(qm.Interface()); err != nil {
+		return ctx.Stack(500, err).End()
+	}
+
+	model := qm.Interface().(oscrud.ServiceModel)
 	order := make(map[string]string)
-	if i.Order != "" {
-		orders := strings.Split(i.Order, ",")
+	if query.Order != "" {
+		orders := strings.Split(query.Order, ",")
 		lastKey := ""
 		for _, key := range orders {
-			if key == "desc" || key == "des" || key == "1-0" {
+			if strings.ToLower(key) == "desc" {
 				order[lastKey] = OrderByDescending
+				lastKey = ""
 				continue
 			}
 			order[key] = ""
+			lastKey = key
 		}
 	}
 
 	fields := make(map[string]string)
-	if i.Select != "" {
-		keys := strings.Split(i.Select, ",")
+	if query.Select != "" {
+		keys := strings.Split(query.Select, ",")
 		for _, key := range keys {
 			fields[key] = ""
 		}
 	}
 
 	paginate := Paginator{
-		Cursor: i.Cursor,
-		Offset: i.Offset,
-		Page:   i.Page,
-		Limit:  i.Limit,
+		Cursor: query.Cursor,
+		Offset: query.Offset,
+		Page:   query.Page,
+		Limit:  query.Limit,
 		Order:  order,
 		Select: fields,
+		Query:  model.ToQuery(),
 	}
 
-	results := make([]*StoreProfile, 0)
-	if err := paginate.GetResult(service.table, &results); err != nil {
+	slice := reflect.New(reflect.SliceOf(reflect.TypeOf(service.model)))
+	if err := paginate.GetResult(service.table, slice.Interface()); err != nil {
 		return ctx.Stack(500, err).End()
 	}
 
@@ -120,7 +105,7 @@ func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 			"limit":  paginate.Limit,
 			"page":   paginate.Page,
 		},
-		"result": results,
+		"result": slice.Interface(),
 	}
 	return ctx.JSON(200, response).End()
 }

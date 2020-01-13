@@ -102,7 +102,12 @@ func (c Context) Body() map[string]interface{} {
 
 // Bind :
 func (c Context) Bind(i interface{}) error {
-	return bind(c.header, c.param, c.body, c.query, i)
+	return c.bind(i)
+}
+
+// BindAll :
+func (c Context) BindAll(i interface{}) error {
+	return c.bindAll(i)
 }
 
 // End :

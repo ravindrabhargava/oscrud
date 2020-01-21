@@ -46,6 +46,34 @@ type Service struct {
 	model    oscrud.ServiceModel
 }
 
+// internal construct new reflect mode
+func (service Service) newModel() reflect.Value {
+	return reflect.New(reflect.TypeOf(service.model).Elem())
+}
+
+// internal construct new reflect slice model
+func (service Service) newModels() reflect.Value {
+	return reflect.New(reflect.SliceOf(reflect.TypeOf(service.model)))
+}
+
+// Create :
+func (service Service) Create(ctx oscrud.Context) oscrud.Context {
+
+	qm := service.newModel()
+	if err := ctx.BindAll(qm.Interface()); err != nil {
+		return ctx.Stack(500, err).End()
+	}
+
+	model := qm.Interface().(oscrud.ServiceModel)
+	data := model.ToCreate()
+	_, err := service.table.InsertOne(data)
+	if err != nil {
+		return ctx.Stack(500, err).End()
+	}
+
+	return ctx.JSON(200, data).End()
+}
+
 // Find :
 func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 
@@ -54,7 +82,7 @@ func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 		return ctx.Stack(500, err).End()
 	}
 
-	qm := reflect.New(reflect.TypeOf(service.model).Elem())
+	qm := service.newModel()
 	if err := ctx.BindAll(qm.Interface()); err != nil {
 		return ctx.Stack(500, err).End()
 	}
@@ -93,7 +121,7 @@ func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 		Query:  model.ToQuery(),
 	}
 
-	slice := reflect.New(reflect.SliceOf(reflect.TypeOf(service.model)))
+	slice := service.newModels()
 	if err := paginate.GetResult(service.table, slice.Interface()); err != nil {
 		return ctx.Stack(500, err).End()
 	}

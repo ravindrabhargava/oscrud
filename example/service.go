@@ -85,5 +85,6 @@ func main() {
 	client.SetPrimaryKey("Key")
 	service := sqlike.NewService(client).Database("test")
 	server.RegisterService("test", service.ToService("user", new(User)))
+
 	server.Start()
 }

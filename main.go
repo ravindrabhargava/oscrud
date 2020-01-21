@@ -75,18 +75,9 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 }
 
 // RegisterService :
-func (server *Oscrud) RegisterService(basePath string, service Service) *Oscrud {
-	path := fixPath(basePath)
-	route := &Route{
-		Method:  "get",
-		Route:   path,
-		Handler: service.Find,
-	}
-
-	server.router.Add(radixPath("get", path), route)
-	for _, transport := range server.transports {
-		transport.Register("get", path, server.transportHandler(route))
-	}
+func (server *Oscrud) RegisterService(basePath string, service Service, opts ...Options) *Oscrud {
+	server.RegisterEndpoint("get", basePath, service.Find, opts)
+	server.RegisterEndpoint("post", basePath, service.Create, opts)
 	return server
 
 }

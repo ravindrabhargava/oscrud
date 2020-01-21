@@ -22,16 +22,17 @@ func (user User) ToQuery() map[string]interface{} {
 }
 
 // ToUpdate :
-func (user User) ToUpdate() interface{} {
+func (user *User) ToUpdate() interface{} {
 	return user
 }
 
 // ToCreate :
-func (user User) ToCreate() interface{} {
+func (user *User) ToCreate() interface{} {
+	user.Name += "-NEW"
 	return user
 }
 
 // ToResult :
-func (user User) ToResult() interface{} {
+func (user *User) ToResult() interface{} {
 	return user
 }

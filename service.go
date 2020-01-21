@@ -3,6 +3,7 @@ package oscrud
 // Service :
 type Service interface {
 	Find(Context) Context
+	Create(Context) Context
 }
 
 // Query :

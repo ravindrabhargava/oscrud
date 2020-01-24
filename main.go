@@ -13,6 +13,7 @@ type Oscrud struct {
 	EventOptions
 
 	transports []Transport
+	binder     Binder
 	router     *radix.Tree
 }
 
@@ -22,6 +23,7 @@ func NewOscrud() *Oscrud {
 	tree.SetBoundaries(':', '/')
 	return &Oscrud{
 		transports: make([]Transport, 0),
+		binder:     NewBinder(),
 		router:     tree,
 	}
 }
@@ -37,6 +39,12 @@ func (server *Oscrud) UseOptions(opts ...Options) *Oscrud {
 			field.Set(opt)
 		}
 	}
+	return server
+}
+
+// RegisterBinder :
+func (server *Oscrud) RegisterBinder(rtype interface{}, bindFn Bind) *Oscrud {
+	server.binder.Register(rtype, bindFn)
 	return server
 }
 
@@ -111,6 +119,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 		header:    req.header,
 		query:     req.query,
 		body:      req.body,
+		oscrud:    *server,
 		sent:      false,
 		result:    nil,
 		exception: nil,

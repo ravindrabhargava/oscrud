@@ -10,6 +10,7 @@ type Context struct {
 	header    map[string]string
 	context   interface{}
 	transport Transport
+	oscrud    Oscrud
 
 	sent            bool
 	contentType     string
@@ -102,12 +103,14 @@ func (c Context) Body() map[string]interface{} {
 
 // Bind :
 func (c Context) Bind(i interface{}) error {
-	return c.bind(i)
+	// return c.bind(i)
+	return nil
 }
 
 // BindAll :
 func (c Context) BindAll(i interface{}) error {
-	return c.bindAll(i)
+	// return c.bindAll(i)
+	return nil
 }
 
 // End :

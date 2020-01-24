@@ -50,6 +50,10 @@ func After(ctx oscrud.Context) oscrud.Context {
 	return ctx.End()
 }
 
+type AnyStruct struct {
+	Data string
+}
+
 func main() {
 	server := oscrud.NewOscrud()
 	server.RegisterTransport(
@@ -86,5 +90,15 @@ func main() {
 	service := sqlike.NewService(client).Database("test")
 	server.RegisterService("test", service.ToService("user", new(User)))
 
+	binder := oscrud.NewBinder()
+	binder.Register(
+		[]int32{},
+		func(data string) (interface{}, error) {
+			return []int32{1, 2, 3}, nil
+		},
+	)
+	var data []int32
+	err := binder.Bind(&data, []int32{1, 2, 3})
+	log.Println(data, err)
 	server.Start()
 }

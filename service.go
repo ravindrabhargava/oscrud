@@ -30,5 +30,5 @@ type ServiceModel interface {
 	ToCreate() interface{}
 	ToUpdate() interface{}
 	ToResult() interface{}
-	ToQuery(string) map[string]interface{}
+	ToQuery(string) interface{}
 }

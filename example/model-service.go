@@ -1,5 +1,7 @@
 package main
 
+import "github.com/si3nloong/sqlike/sql/expr"
+
 // User :
 type User struct {
 	Key  int64  `json:"id"`
@@ -7,15 +9,11 @@ type User struct {
 }
 
 // ToQuery :
-func (user User) ToQuery(pk string) map[string]interface{} {
-	query := make(map[string]interface{})
+func (user User) ToQuery(pk string) interface{} {
+	var query interface{}
 
 	if pk != "" {
-		query["Key"] = pk
-	}
-
-	if user.Name != "" {
-		query["Name"] = user.Name
+		query = expr.Equal("Key", pk)
 	}
 
 	return query

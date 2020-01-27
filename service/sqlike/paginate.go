@@ -3,13 +3,11 @@ package sqlike
 import (
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/si3nloong/sqlike/sql/expr"
 	"github.com/si3nloong/sqlike/sqlike"
 	"github.com/si3nloong/sqlike/sqlike/actions"
 	"github.com/si3nloong/sqlike/sqlike/options"
-	"github.com/si3nloong/sqlike/sqlike/primitive"
 )
 
 // Definition
@@ -25,7 +23,7 @@ type Paginator struct {
 	Limit  int
 	Order  map[string]string
 	Select map[string]string
-	Query  map[string]interface{}
+	Query  interface{}
 }
 
 // NewPaginator :
@@ -52,7 +50,7 @@ func (p *Paginator) GetResult(table *sqlike.Table, result interface{}) error {
 	}
 
 	query = query.Select(selects...)
-	query = query.Where(buildExprs(p.Query)...)
+	query = query.Where(p.Query)
 	for key, value := range p.Order {
 		if value == OrderByDescending {
 			query = query.OrderBy(expr.Desc(key))
@@ -89,64 +87,4 @@ func (p *Paginator) GetResult(table *sqlike.Table, result interface{}) error {
 	}
 
 	return nil
-}
-
-func buildExprs(mapObject interface{}) []interface{} {
-	queryExpr := make([]interface{}, 0)
-	for key, value := range mapObject.(map[string]interface{}) {
-		if key == "$AND" && reflect.TypeOf(value).Kind() == reflect.Map {
-			queryExpr = append(queryExpr, expr.And(buildExprs(value)...))
-		} else if key == "$OR" && reflect.TypeOf(value).Kind() == reflect.Map {
-			queryExpr = append(queryExpr, expr.Or(buildExprs(value)...))
-		} else {
-			queryExpr = append(queryExpr, buildExpr(key, value)...)
-		}
-	}
-	return queryExpr
-}
-
-func buildExpr(key string, value interface{}) []interface{} {
-	query := make([]interface{}, 0)
-	if yes := strings.HasSuffix(key, " LIKE"); yes {
-		query = append(query,
-			expr.Raw(
-				fmt.Sprintf("%s LIKE '%%%s%%'", buildKey(strings.TrimSuffix(key, " LIKE")), value),
-			),
-		)
-	} else if yes := strings.HasSuffix(key, " [OR]"); yes {
-		// https://stackoverflow.com/questions/1127088/mysql-like-in
-		vkey := strings.TrimSuffix(key, " [OR]")
-		exprs := make([]*primitive.Raw, 0)
-		for _, val := range strings.Split(value.(string), ",") {
-			query = append(query,
-				expr.Raw(
-					fmt.Sprintf("%s LIKE '%%%v%%'", buildKey(vkey), val),
-				),
-			)
-		}
-		query = append(query, expr.Or(exprs))
-	} else if yes := strings.HasSuffix(key, " [AND]"); yes {
-		vkey := strings.TrimSuffix(key, " [AND]")
-		exprs := make([]*primitive.Raw, 0)
-		for _, val := range strings.Split(value.(string), ",") {
-			query = append(query,
-				expr.Raw(
-					fmt.Sprintf("%s LIKE '%%%v%%'", buildKey(vkey), val),
-				),
-			)
-		}
-		query = append(query, expr.And(exprs))
-	} else {
-		query = append(query, expr.Equal(buildKey(key), value))
-	}
-
-	return query
-}
-
-func buildKey(key string) interface{} {
-	if !strings.Contains(key, ".") {
-		return key
-	}
-	keys := strings.Split(key, ".")
-	return expr.JSONColumn(keys[0], keys[1:]...)
 }

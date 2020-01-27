@@ -7,115 +7,6 @@ import (
 	"strconv"
 )
 
-var (
-	queryTag      = "query"
-	bodyTag       = "body"
-	paramTag      = "param"
-	headerTag     = "header"
-	jsonTag       = "json"
-	queryModelTag = "qm"
-)
-
-// func (c Context) bindAll(assign interface{}) error {
-// 	t := reflect.TypeOf(assign)
-// 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
-// 		return errors.New("binder interface must be addressable struct")
-// 	}
-
-// 	setter := reflect.ValueOf(assign).Elem()
-// 	npt := t.Elem()
-// 	for i := 0; i < npt.NumField(); i++ {
-// 		field := npt.Field(i)
-// 		key := ""
-// 		json := field.Tag.Get(jsonTag)
-// 		if json != "" {
-// 			key = strings.Split(json, ",")[0]
-// 		}
-
-// 		qm := field.Tag.Get(queryModelTag)
-// 		if qm != "" {
-// 			key = qm
-// 		}
-
-// 		if key != "" {
-// 			if value, ok := c.header[key]; ok {
-// 				if err := Bind(setter.Field(i), value, c.oscrud.binder); err != nil {
-// 					return err
-// 				}
-// 				continue
-// 			}
-
-// 			if value, ok := c.query[key]; ok {
-// 				if err := Bind(setter.Field(i), value, c.oscrud.binder); err != nil {
-// 					return err
-// 				}
-// 				continue
-// 			}
-
-// 			if value, ok := c.body[key]; ok {
-// 				if err := Bind(setter.Field(i), value, c.oscrud.binder); err != nil {
-// 					return err
-// 				}
-// 				continue
-// 			}
-
-// 			if value, ok := c.param[key]; ok {
-// 				if err := Bind(setter.Field(i), value, c.oscrud.binder); err != nil {
-// 					return err
-// 				}
-// 				continue
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }
-
-// func (c Context) bind(assign interface{}) error {
-// 	t := reflect.TypeOf(assign)
-// 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
-// 		return errors.New("binder interface must be addressable struct")
-// 	}
-
-// 	setter := reflect.ValueOf(assign).Elem()
-// 	npt := t.Elem()
-// 	for i := 0; i < npt.NumField(); i++ {
-// 		field := npt.Field(i)
-
-// 		htag := field.Tag.Get(headerTag)
-// 		if value, ok := c.header[htag]; ok {
-// 			if err := Bind(setter.Field(i), value, c.oscrud.binder); err != nil {
-// 				return err
-// 			}
-// 			continue
-// 		}
-
-// 		qtag := field.Tag.Get(queryTag)
-// 		if value, ok := c.query[qtag]; ok {
-// 			if err := Bind(setter.Field(i), value, c.oscrud.binder); err != nil {
-// 				return err
-// 			}
-// 			continue
-// 		}
-
-// 		btag := field.Tag.Get(bodyTag)
-// 		if value, ok := c.body[btag]; ok {
-// 			if err := Bind(setter.Field(i), value, c.oscrud.binder); err != nil {
-// 				return err
-// 			}
-// 			continue
-// 		}
-
-// 		ptag := field.Tag.Get(paramTag)
-// 		if value, ok := c.param[ptag]; ok {
-// 			if err := Bind(setter.Field(i), value, c.oscrud.binder); err != nil {
-// 				return err
-// 			}
-// 			continue
-// 		}
-// 	}
-// 	return nil
-// }
-
 // Binder :
 type Binder struct {
 	custom map[string]Bind
@@ -129,7 +20,7 @@ func NewBinder() Binder {
 }
 
 // Bind :
-type Bind func(string) (interface{}, error)
+type Bind func(interface{}) (interface{}, error)
 
 // Register :
 func (b *Binder) Register(rtype interface{}, bindFn Bind) *Binder {
@@ -201,48 +92,45 @@ func (b Binder) Bind(assign interface{}, value interface{}) error {
 		break
 	case reflect.Slice:
 		if binder, ok := b.custom["slice$"+field.Type().Elem().Name()]; ok {
-			deserialized, err := binder(fmt.Sprintf("%v", value))
+			deserialized, err := binder(value)
 			if err != nil {
 				return fmt.Errorf("Trying to deserialize %v to %v, %v", value, field.Type().Name(), err)
 			}
 			field.Set(reflect.ValueOf(deserialized))
 		} else {
-			// Check if value is list & is struct -> loop -> deserialize
 			qt := reflect.TypeOf(value)
 			if !field.Type().AssignableTo(qt) {
-				return fmt.Errorf("Trying to convert %v to %v", value, field.Addr().Type())
+				return fmt.Errorf("Trying to convert %v to slice %v", value, field.Type().Elem().Name())
 			}
 			field.Set(reflect.ValueOf(value))
 		}
 		break
 	case reflect.Array:
 		if binder, ok := b.custom["array$"+field.Type().Elem().Name()]; ok {
-			deserialized, err := binder(fmt.Sprintf("%v", value))
+			deserialized, err := binder(value)
 			if err != nil {
 				return fmt.Errorf("Trying to deserialize %v to %v, %v", value, field.Type().Name(), err)
 			}
 			field.Set(reflect.ValueOf(deserialized))
 		} else {
-			// Check if value is list & is struct -> loop -> deserialize
 			qt := reflect.TypeOf(value)
 			if !field.Type().AssignableTo(qt) {
-				return fmt.Errorf("Trying to convert %v to %v", value, field.Addr().Type())
+				return fmt.Errorf("Trying to convert %v to array %v", value, field.Type().Elem().Name())
 			}
 			field.Set(reflect.ValueOf(value))
 		}
 		break
 	case reflect.Struct:
 		if binder, ok := b.custom[field.Type().Name()]; ok {
-			deserialized, err := binder(fmt.Sprintf("%v", value))
+			deserialized, err := binder(value)
 			if err != nil {
 				return fmt.Errorf("Trying to deserialize %v to %v, %v", value, field.Type().Name(), err)
 			}
 			field.Set(reflect.ValueOf(deserialized))
 		} else {
-			// Check is struct -> loop field -> deserialzie based on field
 			qt := reflect.TypeOf(value)
 			if !field.Type().AssignableTo(qt) {
-				return fmt.Errorf("Trying to convert %v to %v", value, field.Addr().Type())
+				return fmt.Errorf("Trying to convert %v to struct %v", value, field.Type().Name())
 			}
 			field.Set(reflect.ValueOf(value))
 		}

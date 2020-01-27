@@ -1,6 +1,7 @@
 package sqlike
 
 import (
+	"errors"
 	"oscrud"
 	"reflect"
 	"strings"
@@ -74,6 +75,45 @@ func (service Service) Create(ctx oscrud.Context) oscrud.Context {
 	return ctx.JSON(200, data).End()
 }
 
+// Get :
+func (service Service) Get(ctx oscrud.Context) oscrud.Context {
+
+	query := new(oscrud.QueryOne)
+	if err := ctx.Bind(query); err != nil {
+		return ctx.Stack(500, err).End()
+	}
+
+	qm := service.newModel()
+	if err := ctx.BindAll(qm.Interface()); err != nil {
+		return ctx.Stack(500, err).End()
+	}
+
+	model := qm.Interface().(oscrud.ServiceModel)
+	fields := make(map[string]string)
+	if query.Select != "" {
+		keys := strings.Split(query.Select, ",")
+		for _, key := range keys {
+			fields[key] = ""
+		}
+	}
+
+	paginate := Paginator{
+		Limit:  1,
+		Select: fields,
+		Query:  model.ToQuery(query.Pk),
+	}
+
+	slice := service.newModels()
+	if err := paginate.GetResult(service.table, slice.Interface()); err != nil {
+		return ctx.Stack(500, err).End()
+	}
+
+	if slice.Elem().Len() == 1 {
+		return ctx.JSON(200, slice.Elem().Index(0).Interface()).End()
+	}
+	return ctx.Error(404, errors.New("entity not found")).End()
+}
+
 // Find :
 func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 
@@ -118,7 +158,7 @@ func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 		Limit:  query.Limit,
 		Order:  order,
 		Select: fields,
-		Query:  model.ToQuery(),
+		Query:  model.ToQuery(""),
 	}
 
 	slice := service.newModels()

@@ -7,11 +7,11 @@ type User struct {
 }
 
 // ToQuery :
-func (user User) ToQuery() map[string]interface{} {
+func (user User) ToQuery(pk string) map[string]interface{} {
 	query := make(map[string]interface{})
 
-	if user.Key != 0 {
-		query["Key"] = user.Key
+	if pk != "" {
+		query["Key"] = pk
 	}
 
 	if user.Name != "" {

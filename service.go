@@ -3,6 +3,7 @@ package oscrud
 // Service :
 type Service interface {
 	Find(Context) Context
+	Get(Context) Context
 	Create(Context) Context
 }
 
@@ -17,10 +18,17 @@ type Query struct {
 	Query  map[string]interface{}
 }
 
+// QueryOne :
+type QueryOne struct {
+	Query  map[string]interface{}
+	Pk     string `param:"$id"`
+	Select string `query:"$select"`
+}
+
 // ServiceModel :
 type ServiceModel interface {
 	ToCreate() interface{}
 	ToUpdate() interface{}
 	ToResult() interface{}
-	ToQuery() map[string]interface{}
+	ToQuery(string) map[string]interface{}
 }

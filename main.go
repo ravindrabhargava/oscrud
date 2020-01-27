@@ -86,6 +86,7 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 func (server *Oscrud) RegisterService(basePath string, service Service, opts ...Options) *Oscrud {
 	server.RegisterEndpoint("get", basePath, service.Find, opts)
 	server.RegisterEndpoint("post", basePath, service.Create, opts)
+	server.RegisterEndpoint("get", basePath+"/:$id", service.Get, opts)
 	return server
 
 }

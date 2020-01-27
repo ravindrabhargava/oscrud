@@ -53,6 +53,10 @@ func (t TransportResponse) Result() interface{} {
 func (t TransportResponse) ErrorMap() map[string]interface{} {
 	err := make(map[string]interface{})
 	err["error"] = t.exception.Error()
-	err["stack"] = strings.Split(strings.ReplaceAll(fmt.Sprintf("%+v", t.exception), "\t", ""), "\n")[2:]
+
+	stack := strings.Split(strings.ReplaceAll(fmt.Sprintf("%+v", t.exception), "\t", ""), "\n")
+	if len(stack) > 1 {
+		err["stack"] = stack[2:]
+	}
 	return err
 }

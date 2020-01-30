@@ -4,16 +4,16 @@ import "github.com/si3nloong/sqlike/sql/expr"
 
 // User :
 type User struct {
-	Key  int64  `json:"id"`
+	Key  int64  `json:"id" qm:"$id"`
 	Name string `json:"name"`
 }
 
 // ToQuery :
-func (user User) ToQuery(pk string) interface{} {
+func (user User) ToQuery() interface{} {
 	var query interface{}
 
-	if pk != "" {
-		query = expr.Equal("Key", pk)
+	if user.Key != 0 {
+		query = expr.Equal("Key", user.Key)
 	}
 
 	return query

@@ -5,6 +5,9 @@ type Service interface {
 	Find(Context) Context
 	Get(Context) Context
 	Create(Context) Context
+	Update(Context) Context
+	Patch(Context) Context
+	Delete(Context) Context
 }
 
 // Query :
@@ -21,7 +24,6 @@ type Query struct {
 // QueryOne :
 type QueryOne struct {
 	Query  map[string]interface{}
-	Pk     string `param:"$id"`
 	Select string `query:"$select"`
 }
 
@@ -30,5 +32,5 @@ type ServiceModel interface {
 	ToCreate() interface{}
 	ToUpdate() interface{}
 	ToResult() interface{}
-	ToQuery(string) interface{}
+	ToQuery() interface{}
 }

@@ -31,6 +31,28 @@ func NewPaginator() Paginator {
 	return Paginator{}
 }
 
+// BuildMeta :
+func (p Paginator) BuildMeta() map[string]interface{} {
+	meta := make(map[string]interface{}, 0)
+
+	if p.Cursor != "" {
+		meta["cursor"] = p.Cursor
+	}
+
+	if p.Offset != 0 {
+		meta["offset"] = p.Offset
+	}
+
+	if p.Limit != 0 {
+		meta["limit"] = p.Limit
+	}
+
+	if p.Page != 0 {
+		meta["page"] = p.Page
+	}
+	return meta
+}
+
 // GetResult :
 func (p *Paginator) GetResult(table *sqlike.Table, result interface{}) error {
 	query := actions.Paginate().Limit(uint(p.Limit + 1))

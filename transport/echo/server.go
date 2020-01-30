@@ -51,7 +51,7 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 			}
 
 			body := make(map[string]interface{})
-			if e.Request().Method != "GET" {
+			if e.Request().Method != "GET" && len(bytes) > 0 {
 				err = json.Unmarshal(bytes, &body)
 				if err != nil {
 					panic(err)

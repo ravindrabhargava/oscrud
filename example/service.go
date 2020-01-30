@@ -50,6 +50,7 @@ func After(ctx oscrud.Context) oscrud.Context {
 	return ctx.End()
 }
 
+// AnyStruct :
 type AnyStruct struct {
 	Data string
 }
@@ -87,6 +88,7 @@ func main() {
 			SetPassword("test"),
 	)
 	client.SetPrimaryKey("Key")
+
 	service := sqlike.NewService(client).Database("test")
 	server.RegisterService("test", service.ToService("user", new(User)))
 	server.Start()

@@ -23,7 +23,14 @@ type Request struct {
 
 // NewRequest :
 func NewRequest(args ...string) *Request {
-	req := &Request{transport: nil, skip: skipNone}
+	req := &Request{
+		transport: nil,
+		skip:      skipNone,
+		query:     make(map[string]interface{}),
+		body:      make(map[string]interface{}),
+		param:     make(map[string]string),
+		header:    make(map[string]string),
+	}
 	if len(args) == 2 {
 		req.method = args[0]
 		req.path = args[1]

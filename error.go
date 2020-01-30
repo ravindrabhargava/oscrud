@@ -2,7 +2,6 @@ package oscrud
 
 import (
 	"errors"
-	"fmt"
 
 	errs "github.com/pkg/errors"
 )
@@ -27,31 +26,16 @@ func (c Context) NotFound() Context {
 	return c
 }
 
-// ErrStack :
-func (c Context) ErrStack(status int, result interface{}, stack error) Context {
+// Error :
+func (c Context) Error(status int, exception error) Context {
 	c.status = status
-	c.result = result
-	c.exception = stack
-	return c
-}
-
-// Error
-func (c Context) Error(status int, result interface{}) Context {
-	c.status = status
-	c.result = result
+	c.exception = exception
 	return c
 }
 
 // Stack :
-func (c Context) Stack(status int, stack error) Context {
+func (c Context) Stack(status int, exception error) Context {
 	c.status = status
-	c.exception = errs.WithStack(stack)
-	return c
-}
-
-// Message :
-func (c Context) Message(status int, message string) Context {
-	c.status = status
-	c.exception = fmt.Errorf(message)
+	c.exception = errs.WithStack(exception)
 	return c
 }

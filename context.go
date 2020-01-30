@@ -1,5 +1,12 @@
 package oscrud
 
+import (
+	"errors"
+	"oscrud/util"
+	"reflect"
+	"strings"
+)
+
 // Context :
 type Context struct {
 	method    string
@@ -10,6 +17,7 @@ type Context struct {
 	header    map[string]string
 	context   interface{}
 	transport Transport
+	oscrud    Oscrud
 
 	sent            bool
 	contentType     string
@@ -101,8 +109,81 @@ func (c Context) Body() map[string]interface{} {
 }
 
 // Bind :
-func (c Context) Bind(i interface{}) error {
-	return bind(c.header, c.param, c.body, c.query, i)
+func (c Context) Bind(assign interface{}) error {
+	t := reflect.TypeOf(assign)
+	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
+		return errors.New("binder interface must be addressable")
+	}
+
+	setter := reflect.ValueOf(assign).Elem()
+	npt := t.Elem()
+	for i := 0; i < npt.NumField(); i++ {
+		field := npt.Field(i)
+		var value interface{}
+
+		htag := field.Tag.Get("header")
+		if val, ok := c.header[htag]; ok {
+			value = val
+		}
+
+		qtag := field.Tag.Get("query")
+		if val, ok := c.query[qtag]; ok {
+			value = val
+		}
+
+		btag := field.Tag.Get("body")
+		if val, ok := c.body[btag]; ok {
+			value = val
+		}
+
+		ptag := field.Tag.Get("param")
+		if val, ok := c.param[ptag]; ok {
+			value = val
+		}
+
+		if value != nil {
+			if err := c.oscrud.binder.Bind(setter.Field(i).Addr().Interface(), value); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// BindAll :
+func (c Context) BindAll(assign interface{}) error {
+	t := reflect.TypeOf(assign)
+	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
+		return errors.New("binder interface must be addressable")
+	}
+
+	setter := reflect.ValueOf(assign).Elem()
+	npt := t.Elem()
+	values := util.MergeMaps(c.header, c.query, c.body, c.param)
+	for i := 0; i < npt.NumField(); i++ {
+		field := npt.Field(i)
+		var key string
+
+		json := field.Tag.Get("json")
+		if json != "" {
+			key = strings.Split(json, ",")[0]
+		}
+
+		qm := field.Tag.Get("qm")
+		if qm != "" {
+			key = qm
+		}
+
+		if key != "" {
+			if value, ok := values[key]; ok {
+				if err := c.oscrud.binder.Bind(setter.Field(i).Addr().Interface(), value); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // End :

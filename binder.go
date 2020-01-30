@@ -7,58 +7,51 @@ import (
 	"strconv"
 )
 
-var (
-	queryTag  = "query"
-	bodyTag   = "body"
-	paramTag  = "param"
-	headerTag = "header"
-)
+// Binder :
+type Binder struct {
+	custom map[string]Bind
+}
 
-func bind(header map[string]string, param map[string]string, body map[string]interface{}, query map[string]interface{}, assign interface{}) error {
-	t := reflect.TypeOf(assign)
-	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
+// NewBinder :
+func NewBinder() *Binder {
+	return &Binder{
+		custom: make(map[string]Bind),
+	}
+}
+
+// Bind :
+type Bind func(interface{}) (interface{}, error)
+
+// Register :
+func (b *Binder) Register(rtype interface{}, bindFn Bind) *Binder {
+	typ := reflect.TypeOf(rtype)
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	if typ.Kind() == reflect.Array {
+		b.custom["array$"+typ.Elem().Name()] = bindFn
+	} else if typ.Kind() == reflect.Slice {
+		b.custom["slice$"+typ.Elem().Name()] = bindFn
+	} else {
+		b.custom[typ.Name()] = bindFn
+	}
+	return b
+}
+
+// Bind :
+func (b Binder) Bind(assign interface{}, value interface{}) error {
+	typ := reflect.TypeOf(assign)
+	if typ.Kind() != reflect.Ptr {
 		return errors.New("binder interface must be addressable struct")
 	}
 
-	setter := reflect.ValueOf(assign).Elem()
-	npt := t.Elem()
-	for i := 0; i < npt.NumField(); i++ {
-		field := npt.Field(i)
-
-		htag := field.Tag.Get(headerTag)
-		if value, ok := header[htag]; ok {
-			if err := bindValue(setter.Field(i), value); err != nil {
-				return err
-			}
-		}
-
-		qtag := field.Tag.Get(queryTag)
-		if value, ok := query[qtag]; ok {
-			if err := bindValue(setter.Field(i), value); err != nil {
-				return err
-			}
-		}
-
-		btag := field.Tag.Get(bodyTag)
-		if value, ok := body[btag]; ok {
-			if err := bindValue(setter.Field(i), value); err != nil {
-				return err
-			}
-		}
-
-		ptag := field.Tag.Get(paramTag)
-		if value, ok := param[ptag]; ok {
-			if err := bindValue(setter.Field(i), value); err != nil {
-				return err
-			}
-		}
+	field := reflect.ValueOf(assign).Elem()
+	if !field.CanSet() {
+		return fmt.Errorf("Trying to bind() on unexported field")
 	}
-	return nil
-}
 
-func bindValue(field reflect.Value, value interface{}) error {
 	switch field.Type().Kind() {
-
 	case reflect.Float32, reflect.Float64:
 		str := fmt.Sprintf("%v", value)
 		bit := field.Type().Bits()
@@ -88,9 +81,6 @@ func bindValue(field reflect.Value, value interface{}) error {
 		break
 	case reflect.String:
 		result := fmt.Sprintf("%v", value)
-		if !field.CanSet() {
-			return fmt.Errorf("Trying to BindValue() on unexported field")
-		}
 		field.SetString(result)
 	case reflect.Bool:
 		str := fmt.Sprintf("%v", value)
@@ -98,22 +88,60 @@ func bindValue(field reflect.Value, value interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Trying to convert %v to bool", value)
 		}
-		if !field.CanSet() {
-			return fmt.Errorf("Trying to BindValue() on unexported field")
-		}
 		field.SetBool(result)
+		break
+	case reflect.Slice:
+		if binder, ok := b.custom["slice$"+field.Type().Elem().Name()]; ok {
+			deserialized, err := binder(value)
+			if err != nil {
+				return fmt.Errorf("Trying to deserialize %v to %v, %v", value, field.Type().Name(), err)
+			}
+			field.Set(reflect.ValueOf(deserialized))
+		} else {
+			qt := reflect.TypeOf(value)
+			if !field.Type().AssignableTo(qt) {
+				return fmt.Errorf("Trying to convert %v to slice %v", value, field.Type().Elem().Name())
+			}
+			field.Set(reflect.ValueOf(value))
+		}
+		break
+	case reflect.Array:
+		if binder, ok := b.custom["array$"+field.Type().Elem().Name()]; ok {
+			deserialized, err := binder(value)
+			if err != nil {
+				return fmt.Errorf("Trying to deserialize %v to %v, %v", value, field.Type().Name(), err)
+			}
+			field.Set(reflect.ValueOf(deserialized))
+		} else {
+			qt := reflect.TypeOf(value)
+			if !field.Type().AssignableTo(qt) {
+				return fmt.Errorf("Trying to convert %v to array %v", value, field.Type().Elem().Name())
+			}
+			field.Set(reflect.ValueOf(value))
+		}
+		break
+	case reflect.Struct:
+		if binder, ok := b.custom[field.Type().Name()]; ok {
+			deserialized, err := binder(value)
+			if err != nil {
+				return fmt.Errorf("Trying to deserialize %v to %v, %v", value, field.Type().Name(), err)
+			}
+			field.Set(reflect.ValueOf(deserialized))
+		} else {
+			qt := reflect.TypeOf(value)
+			if !field.Type().AssignableTo(qt) {
+				return fmt.Errorf("Trying to convert %v to struct %v", value, field.Type().Name())
+			}
+			field.Set(reflect.ValueOf(value))
+		}
 		break
 	default:
 		qt := reflect.TypeOf(value)
 		if !field.Type().AssignableTo(qt) {
 			return fmt.Errorf("Trying to convert %v to %v", value, field.Addr().Type())
 		}
-		if !field.CanSet() {
-			return fmt.Errorf("Trying to BindValue() on unexported field")
-		}
 		field.Set(reflect.ValueOf(value))
 		break
-
 	}
 
 	return nil

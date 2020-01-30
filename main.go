@@ -13,7 +13,7 @@ type Oscrud struct {
 	EventOptions
 
 	transports []Transport
-	binder     Binder
+	binder     *Binder
 	router     *radix.Tree
 }
 

@@ -16,18 +16,18 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// Before :
-func Before(ctx oscrud.Context) oscrud.Context {
-	log.Println("I'm Before")
-	return ctx
+// AnyStruct :
+type AnyStruct struct {
+	Data string
 }
 
 // Test2 :
 func Test2(ctx oscrud.Context) oscrud.Context {
 	var i struct {
-		Test0 int    `param:"id"`
-		Test2 uint64 `query:"test"`
-		Test3 int32  `body:"test"`
+		Test0  int       `param:"id"`
+		Test2  uint64    `query:"test"`
+		Test3  int32     `body:"test"`
+		Struct AnyStruct `query:"any_struct"`
 	}
 
 	err := ctx.Bind(&i)
@@ -38,30 +38,32 @@ func Test2(ctx oscrud.Context) oscrud.Context {
 	if i.Test0 == 0 {
 		return ctx.Error(500, errors.New("ID should bigger than 0"))
 	}
-
-	log.Println(i, err)
-	log.Println("You're accessing Endpoint.")
-	return ctx.String(200, "TestValue")
-}
-
-// After :
-func After(ctx oscrud.Context) oscrud.Context {
-	log.Println("I'm After")
-	return ctx.End()
-}
-
-// AnyStruct :
-type AnyStruct struct {
-	Data string
+	log.Println("Binder AnyStruct : ", i.Struct)
+	return ctx.String(200, "You're accessing endpoint.")
 }
 
 func main() {
 	server := oscrud.NewOscrud()
+
+	// Register transport
 	server.RegisterTransport(
 		ec.NewEcho(echo.New()).UsePort(5001),
 		sc.NewSocket(nil).UsePort(3000),
 	)
 
+	// Register data binding for specific struct / slice / array.
+	server.RegisterBinder(
+		AnyStruct{},
+		func(raw interface{}) (interface{}, error) {
+			str, ok := raw.(string)
+			if ok {
+				return AnyStruct{str}, nil
+			}
+			return nil, errors.New("received data isn't a string")
+		},
+	)
+
+	// Endpoint options definition ( usually be middleware )
 	event := oscrud.EventOptions{
 		OnComplete: func(ctx oscrud.Context) {
 			log.Println("This running from go-routine as event-drive OnComplete().")
@@ -72,14 +74,18 @@ func main() {
 		After:  []oscrud.Handler{After},
 	}
 
+	// Register Endpoint
 	server.RegisterEndpoint("GET", "/test2/:id/test", Test2, event, middleware)
 
-	res := server.Endpoint("GET", "/test2/1/test", oscrud.NewRequest())
+	// Internal Call
+	req := oscrud.NewRequest().Query("any_struct", "223")
+	res := server.Endpoint("GET", "/test2/1/test", req)
 	log.Println(res.Result(), res.Error())
 
 	res = server.Endpoint("GET", "/test2/0/test", oscrud.NewRequest())
 	log.Println(res.Result(), res.Error())
 
+	// Sqlike database conn initialize
 	client := sql.MustConnect("mysql",
 		options.Connect().
 			SetHost("localhost").
@@ -89,7 +95,10 @@ func main() {
 	)
 	client.SetPrimaryKey("Key")
 
+	// Service Definition
 	service := sqlike.NewService(client).Database("test")
 	server.RegisterService("test", service.ToService("user", new(User)))
+
+	// Everything done? Start the server.
 	server.Start()
 }

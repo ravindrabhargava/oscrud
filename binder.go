@@ -13,8 +13,8 @@ type Binder struct {
 }
 
 // NewBinder :
-func NewBinder() Binder {
-	return Binder{
+func NewBinder() *Binder {
+	return &Binder{
 		custom: make(map[string]Bind),
 	}
 }

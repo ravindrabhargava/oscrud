@@ -1,7 +1,6 @@
 package oscrud
 
 import (
-	"errors"
 	"oscrud/util"
 	"reflect"
 	"strings"
@@ -110,7 +109,7 @@ func (c Context) Body() map[string]interface{} {
 func (c Context) Bind(assign interface{}) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
-		return errors.New("binder interface must be addressable")
+		return ErrSourceNotAddressable
 	}
 
 	setter := reflect.ValueOf(assign).Elem()
@@ -153,7 +152,7 @@ func (c Context) Bind(assign interface{}) error {
 func (c Context) BindAll(assign interface{}) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
-		return errors.New("binder interface must be addressable")
+		return ErrSourceNotAddressable
 	}
 
 	setter := reflect.ValueOf(assign).Elem()

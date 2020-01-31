@@ -1,7 +1,6 @@
 package oscrud
 
 import (
-	"errors"
 	"oscrud/util"
 	"reflect"
 	"strings"
@@ -166,7 +165,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 		if server.OnTimeout != nil {
 			return server.OnTimeout(ctx)
 		}
-		return ctx.Error(408, errors.New("Request Timeout")).End()
+		return ctx.Error(408, ErrRequestTimeout).End()
 	case ctx = <-gr:
 		return ctx
 	}

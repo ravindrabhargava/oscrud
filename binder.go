@@ -1,7 +1,6 @@
 package oscrud
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -43,7 +42,7 @@ func (b *Binder) Register(rtype interface{}, bindFn Bind) *Binder {
 func (b Binder) Bind(assign interface{}, value interface{}) error {
 	typ := reflect.TypeOf(assign)
 	if typ.Kind() != reflect.Ptr {
-		return errors.New("binder interface must be addressable struct")
+		return ErrSourceNotAddressable
 	}
 
 	field := reflect.ValueOf(assign).Elem()

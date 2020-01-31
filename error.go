@@ -8,9 +8,11 @@ import (
 
 // Error Definition
 var (
-	ErrNotFound            = errors.New("endpoint or service not found")
-	ErrResponseNotComplete = errors.New("response doesn't called end in all handlers")
-	ErrResponseFailed      = errors.New("response doesn't return properly in transport")
+	ErrNotFound             = errors.New("endpoint or service not found")
+	ErrResponseNotComplete  = errors.New("response doesn't called end in all handlers")
+	ErrResponseFailed       = errors.New("response doesn't return properly in transport")
+	ErrSourceNotAddressable = errors.New("binder source must be addressable")
+	ErrRequestTimeout       = errors.New("request timeout")
 )
 
 func (c Context) missingEnd() Context {

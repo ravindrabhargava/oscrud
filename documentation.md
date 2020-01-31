@@ -11,6 +11,7 @@
   - [RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud](#registerendpointmethod-endpoint-string-handler-handler-opts-options-oscrud)
   - [RegisterService(basePath string, service Service, opts ...Options) *Oscrud](#registerservicebasepath-string-service-service-opts-options-oscrud)
   - [Start()](#start)
+- [Handler & Context](#handler--context)
 - [References & Resources](#references--resources)
   - [Available Options](#available-options)
   - [Transport ( Official / Community )](#transport--official--community-)
@@ -219,6 +220,11 @@ func main() {
 	server.Start()
 }
 ```
+
+# Handler & Context
+
+`oscrud.Handler` is just a function `func(Context) Context`. `oscrud.Handler` act as main handler for whole framework, endpoint handler is using it and middleware options also using the same handler.
+
 
 
 # References & Resources

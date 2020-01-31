@@ -2,6 +2,7 @@ package oscrud
 
 import (
 	"errors"
+	"oscrud/util"
 	"reflect"
 	"strings"
 	"time"
@@ -61,7 +62,7 @@ func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
 
 // RegisterEndpoint :
 func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud {
-	radix := radixPath(method, endpoint)
+	radix := util.RadixPath(method, endpoint)
 	route := &Route{
 		Method:  strings.ToLower(method),
 		Route:   endpoint,
@@ -88,8 +89,8 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 // RegisterService :
 func (server *Oscrud) RegisterService(basePath string, service Service, opts ...Options) *Oscrud {
 	server.RegisterEndpoint("get", basePath, service.Find, opts)
-	server.RegisterEndpoint("get", basePath+"/:$id", service.Get, opts)
 	server.RegisterEndpoint("post", basePath, service.Create, opts)
+	server.RegisterEndpoint("get", basePath+"/:$id", service.Get, opts)
 	server.RegisterEndpoint("put", basePath+"/:$id", service.Update, opts)
 	server.RegisterEndpoint("patch", basePath+"/:$id", service.Patch, opts)
 	server.RegisterEndpoint("delete", basePath+"/:$id", service.Delete, opts)
@@ -133,7 +134,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	}
 
 	if route == nil {
-		node, params := server.router.Get(radixPath(req.method, req.path))
+		node, params := server.router.Get(util.RadixPath(req.method, req.path))
 		if node == nil {
 			return ctx.NotFound().End()
 		}
@@ -200,20 +201,4 @@ func (server *Oscrud) invokeHandler(route *Route, req *Request, ctx Context, gr 
 		}
 	}
 	gr <- ctx.missingEnd()
-}
-
-func radixPath(method, path string) string {
-	return strings.ToLower(method) + fixPath(path)
-}
-
-func fixPath(path string) string {
-	if !strings.HasPrefix(path, "/") {
-		path = "/" + path
-	}
-
-	if strings.HasSuffix(path, "/") {
-		path = strings.TrimSuffix(path, "/")
-	}
-
-	return path
 }

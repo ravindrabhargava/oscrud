@@ -8,7 +8,6 @@ import (
 
 	"oscrud/service/sqlike"
 	ec "oscrud/transport/echo"
-	sc "oscrud/transport/socketio"
 
 	sql "github.com/si3nloong/sqlike/sqlike"
 	"github.com/si3nloong/sqlike/sqlike/options"
@@ -49,7 +48,6 @@ func main() {
 	// Register transport
 	server.RegisterTransport(
 		ec.NewEcho(echo.New()).UsePort(3001),
-		sc.NewSocket(nil).UsePort(3000),
 	)
 
 	// Register data binding for specific struct / slice / array.

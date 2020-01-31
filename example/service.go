@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"oscrud"
+	"time"
 
 	"oscrud/service/sqlike"
 	ec "oscrud/transport/echo"
@@ -47,7 +48,7 @@ func main() {
 
 	// Register transport
 	server.RegisterTransport(
-		ec.NewEcho(echo.New()).UsePort(5001),
+		ec.NewEcho(echo.New()).UsePort(3001),
 		sc.NewSocket(nil).UsePort(3000),
 	)
 
@@ -64,6 +65,13 @@ func main() {
 	)
 
 	// Endpoint options definition ( usually be middleware )
+	timeout := oscrud.TimeoutOptions{
+		Duration: 1 * time.Microsecond,
+		OnTimeout: func(ctx oscrud.Context) oscrud.Context {
+			return ctx.Error(408, errors.New("Another requestimeout")).End()
+		},
+	}
+
 	event := oscrud.EventOptions{
 		OnComplete: func(ctx oscrud.Context) {
 			log.Println("This running from go-routine as event-drive OnComplete().")
@@ -73,6 +81,9 @@ func main() {
 		Before: []oscrud.Handler{Before},
 		After:  []oscrud.Handler{After},
 	}
+
+	// Server level options registration
+	server.UseOptions(timeout)
 
 	// Register Endpoint
 	server.RegisterEndpoint("GET", "/test2/:id/test", Test2, event, middleware)

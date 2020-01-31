@@ -9,14 +9,15 @@ import (
 
 // Context :
 type Context struct {
-	method    string
-	path      string
-	query     map[string]interface{}
-	body      map[string]interface{}
-	param     map[string]string
-	header    map[string]string
+	method string
+	path   string
+	query  map[string]interface{}
+	body   map[string]interface{}
+	param  map[string]string
+	header map[string]string
+
 	context   interface{}
-	transport Transport
+	transport string
 	oscrud    Oscrud
 
 	sent            bool
@@ -77,10 +78,7 @@ func (c Context) Context() interface{} {
 
 // Transport :
 func (c Context) Transport() string {
-	if c.transport == nil {
-		return ""
-	}
-	return c.transport.Name()
+	return c.transport
 }
 
 // Path :

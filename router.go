@@ -1,5 +1,7 @@
 package oscrud
 
+import "time"
+
 // Handler :
 type Handler func(Context) Context
 
@@ -7,6 +9,7 @@ type Handler func(Context) Context
 type Route struct {
 	MiddlewareOptions
 	EventOptions
+	TimeoutOptions
 
 	Method  string
 	Route   string
@@ -16,6 +19,12 @@ type Route struct {
 
 // Options :
 type Options interface{}
+
+// TimeoutOptions :
+type TimeoutOptions struct {
+	Duration  time.Duration
+	OnTimeout func(Context) Context
+}
 
 // MiddlewareOptions :
 type MiddlewareOptions struct {

@@ -1,8 +1,10 @@
 package oscrud
 
 import (
+	"errors"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/gbrlsnchs/radix"
 )
@@ -11,6 +13,7 @@ import (
 type Oscrud struct {
 	MiddlewareOptions
 	EventOptions
+	TimeoutOptions
 
 	transports []Transport
 	binder     *Binder
@@ -117,16 +120,16 @@ func (server *Oscrud) transportHandler(route *Route) TransportHandler {
 func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	ctx := Context{
 		method:    req.method,
-		transport: req.transport,
 		path:      req.path,
 		param:     req.param,
 		header:    req.header,
 		query:     req.query,
 		body:      req.body,
-		oscrud:    *server,
+		transport: "INTERNAL",
 		sent:      false,
 		result:    nil,
 		exception: nil,
+		oscrud:    *server,
 	}
 
 	if route == nil {
@@ -139,6 +142,36 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 		ctx.param = params
 	}
 
+	if req.transport != nil {
+		ctx.transport = req.transport.Name()
+	}
+
+	gr := make(chan Context, 1)
+	go server.invokeHandler(route, req, ctx, gr)
+
+	duration := 30 * time.Second
+	if server.Duration != 0 {
+		duration = server.Duration
+	}
+	if route.Duration != 0 {
+		duration = route.Duration
+	}
+
+	select {
+	case <-time.After(duration):
+		if route.OnTimeout != nil {
+			return route.OnTimeout(ctx)
+		}
+		if server.OnTimeout != nil {
+			return server.OnTimeout(ctx)
+		}
+		return ctx.Error(408, errors.New("Request Timeout")).End()
+	case ctx = <-gr:
+		return ctx
+	}
+}
+
+func (server *Oscrud) invokeHandler(route *Route, req *Request, ctx Context, gr chan Context) {
 	// MiddlewareOptions :
 	handlers := make([]Handler, 0)
 	if req.skip != skipMiddleware && req.skip != skipBefore && route.Before != nil {
@@ -163,11 +196,10 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 				go server.OnComplete(ctx)
 			}
 
-			return ctx.End()
+			gr <- ctx
 		}
 	}
-
-	return ctx.missingEnd().End()
+	gr <- ctx.missingEnd()
 }
 
 func radixPath(method, path string) string {

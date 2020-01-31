@@ -84,6 +84,7 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 
 			req := oscrud.NewRequest(method, endpoint).
 				Transport(t).
+				Context(e).
 				SetBody(body).
 				SetQuery(query).
 				SetHeader(header).

@@ -10,15 +10,15 @@ var (
 
 // Request :
 type Request struct {
-	method    string
 	transport Transport
+	context   interface{}
+	method    string
 	path      string
 	query     map[string]interface{}
 	body      map[string]interface{}
 	param     map[string]string
 	header    map[string]string
 	skip      string
-	context   interface{}
 }
 
 // NewRequest :

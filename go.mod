@@ -3,11 +3,9 @@ module oscrud
 go 1.13
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gbrlsnchs/radix v1.0.0
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/googollee/go-engine.io v1.4.2
-	github.com/googollee/go-socket.io v1.4.2
-	github.com/gorilla/websocket v1.4.1 // indirect
 	github.com/labstack/echo/v4 v4.1.11
 	github.com/pkg/errors v0.8.1
 	github.com/si3nloong/sqlike v0.0.0-20200131013017-db4df18610d0

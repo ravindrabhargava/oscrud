@@ -1,7 +1,11 @@
 <!-- omit in toc -->
-# Table Of Contents
+# Introduction
 
-- [Introduction](#introduction)
+Oscrud is a golang resftul api wrapper framework. The purpose of the framework is make everything independent like transport, authentication, middleware and parser. So we can change the component to what we want anytime without changing code. This framework is inspired from [FeathersJS](https://feathersjs.com/). Currently framework still under development, any suggestion or PR is welcome.
+
+<!-- omit in toc -->
+# Documentation
+
 - [Getting Started](#getting-started)
 - [Oscrud Server](#oscrud-server)
 	- [NewOscrud() *Oscrud](#newoscrud-oscrud)
@@ -43,10 +47,6 @@
 - [Discussion](#discussion)
 	- [PR & Suggestion](#pr--suggestion)
 	- [Issues](#issues)
-
-# Introduction
-
-Oscrud is a golang resftul api wrapper framework. The purpose of the framework is make everything independent like transport, authentication, middleware and parser. So we can change the component to what we want anytime without changing code. This framework is inspired from [FeathersJS](https://feathersjs.com/). Currently framework still under development, any suggestion or PR is welcome.
 
 # Getting Started
 

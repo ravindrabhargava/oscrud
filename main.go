@@ -204,7 +204,9 @@ func (server *Oscrud) invokeHandler(route *Route, req *Request, ctx Context, gr 
 			}
 
 			gr <- ctx
+			return
 		}
 	}
 	gr <- ctx.missingEnd()
+	return
 }

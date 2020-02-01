@@ -64,12 +64,6 @@ func (c Context) Get(key string) interface{} {
 	return nil
 }
 
-// Set :
-func (c Context) Set(key string, value string) Context {
-	c.responseHeaders[key] = value
-	return c
-}
-
 // Context :
 func (c Context) Context() interface{} {
 	return c.context
@@ -181,10 +175,4 @@ func (c Context) BindAll(assign interface{}) error {
 		}
 	}
 	return nil
-}
-
-// End :
-func (c Context) End() Context {
-	c.sent = true
-	return c
 }

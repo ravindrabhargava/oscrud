@@ -46,7 +46,7 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 Currently package only tested in Go 1.13. To install the package 
 
 ```
-$ go get -u github.com/Oskang09/oscrud
+$ go get -u github.com/oscrud/oscrud
 ```
 
 After complete installation, you can Go with your beloved framework and here an hello world example. You can choose your own transport from lists, currently only supported Echo. For future will implement [service discovery](https://github.com/hashicorp/mdns) by default.
@@ -55,7 +55,7 @@ After complete installation, you can Go with your beloved framework and here an 
 package main
 
 import (
-    "github.com/Oskang09/oscrud"
+    "github.com/oscrud/oscrud"
 )
 
 func main() {

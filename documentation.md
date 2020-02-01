@@ -500,6 +500,14 @@ func (service Service) Delete(ctx oscrud.Context) oscrud.Context {
 
 Service model is a model struct usually will be a table from database. Service model must have implmenet method from `oscrud.DataModel`. So when creating own service, we can use method to filter result or returning data even prevent toxic data injection. `$id` tag will automatically assign input value from endpoint, such as `GET /test/:$id` for a `Get` action.
 
+| Method                 | Usage                                                                                                           |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| ToQuery() interface{}  | For returning query syntax based on service requirement, for sqlike is expr cosntruct from their query builder. |
+| ToUpdate() interface{} | For construct model and return for update                                                                       |
+| ToCreate() interface{} | For construct model and return for create                                                                       |
+| ToResult() interface{} | For construct model and return for find / get                                                                   |
+
+
 ```go
 // User :
 type User struct {

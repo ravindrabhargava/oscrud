@@ -6,6 +6,9 @@ import (
 	"strconv"
 )
 
+// Bind :
+type Bind func(interface{}) (interface{}, error)
+
 // Binder :
 type Binder struct {
 	custom map[string]Bind
@@ -17,9 +20,6 @@ func NewBinder() *Binder {
 		custom: make(map[string]Bind),
 	}
 }
-
-// Bind :
-type Bind func(interface{}) (interface{}, error)
 
 // Register :
 func (b *Binder) Register(rtype interface{}, bindFn Bind) *Binder {

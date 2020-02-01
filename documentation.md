@@ -22,11 +22,12 @@
     - [Example](#example-1)
     - [Transport Implementation](#transport-implementation)
 - [Binder](#binder)
+  - [All Binding](#all-binding)
+  - [Specific Binding](#specific-binding)
+  - [Register New Binder](#register-new-binder)
 - [Service](#service)
 - [Transport](#transport)
 - [References & Resources](#references--resources)
-  - [All Binding](#all-binding)
-  - [Specific Binding](#specific-binding)
   - [Content Type List](#content-type-list)
   - [Errors List](#errors-list)
   - [Available Options](#available-options)
@@ -377,19 +378,13 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
         SetQuery(query).
         SetHeader(header).
         SetParam(param)
-    response := handler(req)
+    res := handler(req)
 }
 ```
 
 # Binder
 
-# Service
-
-# Transport
-
-# References & Resources
-
-Reference and Resource about documentation like list of usable options or third party url.
+Binder is for data binding when transform incoming requests data to a specified struct / type / array or slice. Currently customization only supported on `struct`, `slice` and `array`, primitive type will set by `reflect.Set()`.
 
 ## All Binding
 
@@ -424,6 +419,46 @@ var i struct {
 
 ctx.Bind(&i)
 ```
+
+## Register New Binder
+
+Registering new binder for sepcific type ( struct, array or slice ), primitive not supported yet. 
+
+```go
+type Example struct {
+    Line1 string
+    Line2 string
+}
+
+func main() {
+    // You use binder independently also
+    binder := oscrud.NewBinder()
+    binder.Register(new(Example), func(raw interface{}) (interface{}, error) {
+        str := fmt.Sprintf("%v", raw)
+        if strings.Contains(raw, ",") { 
+            split := strings.Split(raw, ",")
+            return Example{raw[0], raw[1]}, nil
+        }
+        return nil, fmt.Errorf("Invalid data "%v" for deserialize to Example", raw)
+    })
+
+    example := new(Example)
+    err := binder.Bind(&example, "line1,line2")
+    log.Println(example, err) // { line1, line2 }, <nil>
+
+
+    err := binder.Bind(&example, "line1-line2")
+    log.Println(example, err) // nil, "Invalid data line-line2 for deserialize to Example"
+}
+```
+
+# Service
+
+# Transport
+
+# References & Resources
+
+Reference and Resource about documentation like list of usable options or third party url.
 
 ## Content Type List
 

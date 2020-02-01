@@ -26,6 +26,8 @@
   - [Specific Binding](#specific-binding)
   - [Register New Binder](#register-new-binder)
 - [Service](#service)
+  - [Create Own Service](#create-own-service)
+    - [Data Model](#data-model)
 - [Transport](#transport)
 - [References & Resources](#references--resources)
   - [Content Type List](#content-type-list)
@@ -225,7 +227,7 @@ func main() {
 	// Service Definition
     service := sqlike.NewService(client).Database("test")
 
-    // User is a query model struct based on oscrud.ServiceModel interface
+    // User is a query model struct based on oscrud.DataModel interface
 	server.RegisterService("test", service.ToService("user", new(User)), middleware)
 }
 ```
@@ -453,6 +455,82 @@ func main() {
 ```
 
 # Service
+
+Service has 6 action following [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) standard. Basically service will registering 6 endpoints by default. Currently creating a service may required some basic knowledge on `reflect` package, we trying to minimize usage of reflect when creating own service.
+
+* GET /basePath - Service.Find
+* GET /basePath/:$id - Service.Get
+* POST /basePath - Service.Create
+* PUT /basePath/:$id - Service.Update
+* PATCH /basePath/:$id - Service.Patch
+* DELETE /basePath/:$id - Service.Delete
+
+## Create Own Service
+
+For creating own service, you must have implement methods based on `oscrud.Service` interface. There built in have 2 Query Struct for `bind` data from incoming requests, mainly for standardize query naming.
+
+```go
+type Service struct {}
+func (service Service) Create(ctx oscrud.Context) oscrud.Context {
+
+}
+
+func (service Service) Find(ctx oscrud.Context) oscrud.Context {
+    
+}
+
+func (service Service) Get(ctx oscrud.Context) oscrud.Context {
+    
+}
+
+func (service Service) Update(ctx oscrud.Context) oscrud.Context {
+    
+}
+
+func (service Service) Patch(ctx oscrud.Context) oscrud.Context {
+    
+}
+
+func (service Service) Delete(ctx oscrud.Context) oscrud.Context {
+    
+}
+```
+
+### Data Model
+
+Service model is a model struct usually will be a table from database. Service model must have implmenet method from `oscrud.DataModel`. So when creating own service, we can use method to filter result or returning data even prevent toxic data injection. `$id` tag will automatically assign input value from endpoint, such as `GET /test/:$id` for a `Get` action.
+
+```go
+// User :
+type User struct {
+	Key  int64  `json:"id" qm:"$id"`
+	Name string `json:"name"`
+}
+
+func (user User) ToQuery() interface{} {
+	var query interface{}
+
+	if user.Key != 0 {
+		query = expr.Equal("Key", user.Key)
+	}
+
+	return query
+}
+
+func (user *User) ToUpdate() interface{} {
+	return user
+}
+
+func (user *User) ToCreate() interface{} {
+	user.Name += "-NEW"
+	return user
+}
+
+func (user *User) ToResult() interface{} {
+	return user
+}
+
+```
 
 # Transport
 

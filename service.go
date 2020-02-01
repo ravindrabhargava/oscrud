@@ -10,6 +10,14 @@ type Service interface {
 	Delete(Context) Context
 }
 
+// DataModel :
+type DataModel interface {
+	ToCreate() interface{}
+	ToUpdate() interface{}
+	ToResult() interface{}
+	ToQuery() interface{}
+}
+
 // Query :
 type Query struct {
 	Cursor string `query:"$cursor"`
@@ -25,12 +33,4 @@ type Query struct {
 type QueryOne struct {
 	Query  map[string]interface{}
 	Select string `query:"$select"`
-}
-
-// ServiceModel :
-type ServiceModel interface {
-	ToCreate() interface{}
-	ToUpdate() interface{}
-	ToResult() interface{}
-	ToQuery() interface{}
 }

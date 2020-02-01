@@ -28,7 +28,7 @@ func (service *Sqlike) Database(db string) *Sqlike {
 }
 
 // ToService :
-func (service *Sqlike) ToService(table string, model oscrud.ServiceModel) Service {
+func (service *Sqlike) ToService(table string, model oscrud.DataModel) Service {
 	if service.database == nil {
 		panic("You set database by `Database()` before transform to service.")
 	}
@@ -46,7 +46,7 @@ type Service struct {
 	client   *sql.Client
 	database *sql.Database
 	table    *sql.Table
-	model    oscrud.ServiceModel
+	model    oscrud.DataModel
 }
 
 // internal construct new reflect mode
@@ -66,7 +66,7 @@ func (service Service) Create(ctx oscrud.Context) oscrud.Context {
 		return ctx.Stack(500, err).End()
 	}
 
-	model := qm.Interface().(oscrud.ServiceModel)
+	model := qm.Interface().(oscrud.DataModel)
 	data := model.ToCreate()
 	_, err := service.table.InsertOne(data)
 	if err != nil {
@@ -83,7 +83,7 @@ func (service Service) Delete(ctx oscrud.Context) oscrud.Context {
 		return ctx.Stack(500, err).End()
 	}
 
-	model := qm.Interface().(oscrud.ServiceModel)
+	model := qm.Interface().(oscrud.DataModel)
 	if err := service.table.DestroyOne(model); err != nil {
 		return ctx.Stack(500, err).End()
 	}
@@ -97,7 +97,7 @@ func (service Service) Patch(ctx oscrud.Context) oscrud.Context {
 		return ctx.Stack(500, err).End()
 	}
 
-	model := qm.Interface().(oscrud.ServiceModel)
+	model := qm.Interface().(oscrud.DataModel)
 	data := model.ToUpdate()
 	if _, err := service.table.InsertOne(data, options.InsertOne().SetMode(options.InsertOnDuplicate)); err != nil {
 		return ctx.Stack(500, err).End()
@@ -112,7 +112,7 @@ func (service Service) Update(ctx oscrud.Context) oscrud.Context {
 		return ctx.Stack(500, err).End()
 	}
 
-	model := qm.Interface().(oscrud.ServiceModel)
+	model := qm.Interface().(oscrud.DataModel)
 	data := model.ToUpdate()
 	if err := service.table.ModifyOne(data); err != nil {
 		return ctx.Stack(500, err).End()
@@ -132,7 +132,7 @@ func (service Service) Get(ctx oscrud.Context) oscrud.Context {
 		return ctx.Stack(500, err).End()
 	}
 
-	model := qm.Interface().(oscrud.ServiceModel)
+	model := qm.Interface().(oscrud.DataModel)
 	fields := make(map[string]string)
 	if query.Select != "" {
 		keys := strings.Split(query.Select, ",")
@@ -153,7 +153,7 @@ func (service Service) Get(ctx oscrud.Context) oscrud.Context {
 	}
 
 	if slice.Elem().Len() == 1 {
-		data := slice.Elem().Index(0).Interface().(oscrud.ServiceModel)
+		data := slice.Elem().Index(0).Interface().(oscrud.DataModel)
 		return ctx.JSON(200, data.ToResult()).End()
 	}
 	return ctx.Error(404, errors.New("entity not found")).End()
@@ -171,7 +171,7 @@ func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 		return ctx.Stack(500, err).End()
 	}
 
-	model := qm.Interface().(oscrud.ServiceModel)
+	model := qm.Interface().(oscrud.DataModel)
 	order := make(map[string]string)
 	if query.Order != "" {
 		orders := strings.Split(query.Order, ",")
@@ -213,7 +213,7 @@ func (service Service) Find(ctx oscrud.Context) oscrud.Context {
 	data := slice.Elem()
 	result := make([]interface{}, data.Len())
 	for i := 0; i < data.Len(); i++ {
-		result[i] = data.Index(i).Interface().(oscrud.ServiceModel).ToResult()
+		result[i] = data.Index(i).Interface().(oscrud.DataModel).ToResult()
 	}
 
 	response := map[string]interface{}{

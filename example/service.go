@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"oscrud"
+	"time"
 
 	"oscrud/service/sqlike"
 	ec "oscrud/transport/echo"
@@ -62,12 +63,12 @@ func main() {
 	)
 
 	// Endpoint options definition ( usually be middleware )
-	// timeout := oscrud.TimeoutOptions{
-	// 	Duration: 1 * time.Microsecond,
-	// 	OnTimeout: func(ctx oscrud.Context) oscrud.Context {
-	// 		return ctx.Error(408, errors.New("Another requestimeout")).End()
-	// 	},
-	// }
+	timeout := oscrud.TimeoutOptions{
+		Duration: 1 * time.Microsecond,
+		OnTimeout: func(ctx oscrud.Context) oscrud.Context {
+			return ctx.Error(408, errors.New("Another requestimeout")).End()
+		},
+	}
 
 	event := oscrud.EventOptions{
 		OnComplete: func(ctx oscrud.Context) {
@@ -80,7 +81,7 @@ func main() {
 	}
 
 	// Server level options registration
-	// server.UseOptions(timeout)
+	server.UseOptions(timeout)
 
 	// Register Endpoint
 	server.RegisterEndpoint("GET", "/test2/:id/test", Test2, event, middleware)

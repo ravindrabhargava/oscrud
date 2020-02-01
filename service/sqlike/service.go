@@ -49,7 +49,7 @@ type Service struct {
 	model    oscrud.DataModel
 }
 
-// internal construct new reflect mode
+// internal construct new reflect model
 func (service Service) newModel() reflect.Value {
 	return reflect.New(reflect.TypeOf(service.model).Elem())
 }

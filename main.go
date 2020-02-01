@@ -159,6 +159,8 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 
 	select {
 	case <-time.After(duration):
+		gr <- ctx
+
 		if route.OnTimeout != nil {
 			return route.OnTimeout(ctx)
 		}
@@ -185,6 +187,11 @@ func (server *Oscrud) invokeHandler(route *Route, req *Request, ctx Context, gr 
 	}
 
 	for _, handler := range handlers {
+
+		if len(gr) > 0 {
+			return
+		}
+
 		ctx = handler(ctx)
 		if ctx.sent {
 			// EventOptions :

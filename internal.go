@@ -1,4 +1,4 @@
-package oscrud
+package main
 
 // Endpoint :
 func (server *Oscrud) Endpoint(method, endpoint string, req *Request) TransportResponse {

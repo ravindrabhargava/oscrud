@@ -1,9 +1,10 @@
-package oscrud
+package main
 
 import (
-	"oscrud/util"
 	"reflect"
 	"strings"
+
+	"github.com/oscrud/oscrud/util"
 )
 
 // Context :

@@ -1,10 +1,11 @@
-package oscrud
+package main
 
 import (
-	"oscrud/util"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/oscrud/oscrud/util"
 
 	"github.com/gbrlsnchs/radix"
 )

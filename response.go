@@ -1,4 +1,4 @@
-package oscrud
+package main
 
 import (
 	"errors"

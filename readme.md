@@ -59,7 +59,7 @@ $ go get -u github.com/oscrud/oscrud
 After complete installation, you can Go with your beloved framework and here an hello world example. You can choose your own transport from lists, currently only supported Echo. For future will implement [service discovery](https://github.com/hashicorp/mdns) by default.
 
 ```go
-package main
+package oscrud
 
 import (
     "github.com/oscrud/oscrud"
@@ -99,7 +99,7 @@ Hello World
 For constructing a new instance with some default parameters. *Preferred* to use this instead construct yourself unless you know what you're doing.
 
 ```go
-package main
+package oscrud
 
 server := oscrud.NewOscrud()
 ```
@@ -109,7 +109,7 @@ server := oscrud.NewOscrud()
 For apply server-level options ( mean apply to all endpoints ).
 
 ```go
-package main
+package oscrud
 
 server := oscrud.NewOscrud()
 middleware := oscrud.MiddlewareOptions{
@@ -134,7 +134,7 @@ server.UseOptions(middleware, event)
 For register data binding method for specific struct / array / slice. Incoming data can be any type so suggested to be make a switch-case statement with default by handling other type that not supported ( usually just a string from 'header', 'query', 'body' or 'param' ).
 
 ```go
-package main
+package oscrud
 
 // AnyStruct :
 type AnyStruct struct {
@@ -156,7 +156,7 @@ server.RegisterBinder(AnyStruct{}, func(raw interface{}) (interface{}, error) {
 For register transport for the server, *must be called before any endpoint registration*. Every transport must be implemented based on interface.
 
 ```go
-package main
+package oscrud
 
 func main() {
 	server := oscrud.NewOscrud()
@@ -169,7 +169,7 @@ func main() {
 For registering endpoint with specified method, endpoint & handler, and also able to apply endpoint level options ( mean only work on the specifed endpoint ).
 
 ```go
-package main
+package oscrud
 
 func main() {
 	server := oscrud.NewOscrud()
@@ -206,7 +206,7 @@ For registering service on a specified path, basically service would includes 6 
 * DELETE /basePath/:$id - Service.Delete
 
 ```go
-package main
+package oscrud
 
 func main() {
 	server := oscrud.NewOscrud()

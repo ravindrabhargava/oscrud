@@ -1,4 +1,4 @@
-package main
+package oscrud
 
 // Request Skip Definition
 var (

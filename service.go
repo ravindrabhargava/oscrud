@@ -1,4 +1,4 @@
-package main
+package oscrud
 
 // Service :
 type Service interface {

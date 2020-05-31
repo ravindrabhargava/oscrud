@@ -1,5 +1,11 @@
 package oscrud
 
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
+
 // Request Skip Definition
 var (
 	skipMiddleware = "ALL"
@@ -11,7 +17,10 @@ var (
 // Request :
 type Request struct {
 	transport Transport
-	context   interface{}
+	context   context.Context
+
+	requestID string
+	state     map[string]interface{}
 	method    string
 	path      string
 	query     map[string]interface{}
@@ -22,18 +31,16 @@ type Request struct {
 }
 
 // NewRequest :
-func NewRequest(args ...string) *Request {
+func NewRequest() *Request {
 	req := &Request{
 		transport: nil,
+		requestID: uuid.New().String(),
 		skip:      skipNone,
+		state:     make(map[string]interface{}),
 		query:     make(map[string]interface{}),
 		body:      make(map[string]interface{}),
 		param:     make(map[string]string),
 		header:    make(map[string]string),
-	}
-	if len(args) == 2 {
-		req.method = args[0]
-		req.path = args[1]
 	}
 	return req
 }
@@ -63,7 +70,7 @@ func (req *Request) Transport(trs Transport) *Request {
 }
 
 // Context :
-func (req *Request) Context(ctx interface{}) *Request {
+func (req *Request) Context(ctx context.Context) *Request {
 	req.context = ctx
 	return req
 }
@@ -92,6 +99,12 @@ func (req *Request) SetHeader(header map[string]string) *Request {
 	return req
 }
 
+// SetState :
+func (req *Request) SetState(state map[string]interface{}) *Request {
+	req.state = state
+	return req
+}
+
 // Query :
 func (req *Request) Query(key string, value interface{}) *Request {
 	req.query[key] = value
@@ -101,5 +114,17 @@ func (req *Request) Query(key string, value interface{}) *Request {
 // Header :
 func (req *Request) Header(key string, value string) *Request {
 	req.header[key] = value
+	return req
+}
+
+// Param :
+func (req *Request) Param(key string, value string) *Request {
+	req.param[key] = value
+	return req
+}
+
+// State :
+func (req *Request) State(key string, value interface{}) *Request {
+	req.state[key] = value
 	return req
 }

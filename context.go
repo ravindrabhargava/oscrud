@@ -9,16 +9,9 @@ import (
 
 // Context :
 type Context struct {
-	method string
-	path   string
-	query  map[string]interface{}
-	body   map[string]interface{}
-	param  map[string]string
-	header map[string]string
-
-	context   interface{}
-	transport string
-	oscrud    Oscrud
+	route   Route
+	request Request
+	oscrud  Oscrud
 
 	sent            bool
 	contentType     string
@@ -40,64 +33,59 @@ func (c Context) transportResponse() TransportResponse {
 
 // Method :
 func (c Context) Method() string {
-	return c.method
+	return c.route.Method
 }
 
 // Get :
 func (c Context) Get(key string) interface{} {
 
-	if val, ok := c.param[key]; ok {
+	if val, ok := c.request.param[key]; ok {
 		return val
 	}
 
-	if val, ok := c.query[key]; ok {
+	if val, ok := c.request.query[key]; ok {
 		return val
 	}
 
-	if val, ok := c.body[key]; ok {
+	if val, ok := c.request.body[key]; ok {
 		return val
 	}
 
-	if val, ok := c.header[key]; ok {
+	if val, ok := c.request.header[key]; ok {
 		return val
 	}
 
 	return nil
 }
 
-// Context :
-func (c Context) Context() interface{} {
-	return c.context
-}
-
 // Transport :
 func (c Context) Transport() string {
-	return c.transport
+	return c.request.transport.Name()
 }
 
 // Path :
 func (c Context) Path() string {
-	return c.path
+	return c.route.Path
 }
 
 // Headers :
 func (c Context) Headers() map[string]string {
-	return c.header
+	return c.request.header
 }
 
 // Query :
 func (c Context) Query() map[string]interface{} {
-	return c.query
+	return c.request.query
 }
 
 // Params :
 func (c Context) Params() map[string]string {
-	return c.param
+	return c.request.param
 }
 
 // Body :
 func (c Context) Body() map[string]interface{} {
-	return c.body
+	return c.request.body
 }
 
 // Bind :
@@ -114,22 +102,22 @@ func (c Context) Bind(assign interface{}) error {
 		var value interface{}
 
 		htag := field.Tag.Get("header")
-		if val, ok := c.header[htag]; ok {
+		if val, ok := c.request.header[htag]; ok {
 			value = val
 		}
 
 		qtag := field.Tag.Get("query")
-		if val, ok := c.query[qtag]; ok {
+		if val, ok := c.request.query[qtag]; ok {
 			value = val
 		}
 
 		btag := field.Tag.Get("body")
-		if val, ok := c.body[btag]; ok {
+		if val, ok := c.request.body[btag]; ok {
 			value = val
 		}
 
 		ptag := field.Tag.Get("param")
-		if val, ok := c.param[ptag]; ok {
+		if val, ok := c.request.param[ptag]; ok {
 			value = val
 		}
 
@@ -152,7 +140,12 @@ func (c Context) BindAll(assign interface{}) error {
 
 	setter := reflect.ValueOf(assign).Elem()
 	npt := t.Elem()
-	values := util.MergeMaps(c.header, c.query, c.body, c.param)
+	values := util.MergeMaps(
+		c.request.header,
+		c.request.query,
+		c.request.body,
+		c.request.param,
+	)
 	for i := 0; i < npt.NumField(); i++ {
 		field := npt.Field(i)
 		var key string

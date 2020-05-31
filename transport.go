@@ -20,7 +20,7 @@ type TransportHandler func(req *Request) TransportResponse
 // Transport :
 type Transport interface {
 	Register(string, string, TransportHandler)
-	Start(TransportHandler) error
+	Start() error
 	Name() string
 }
 

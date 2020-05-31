@@ -14,7 +14,6 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 	- [RegisterTransport(transports ...Transport) *Oscrud](#registertransporttransports-transport-oscrud)
 	- [RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud](#registerendpointmethod-endpoint-string-handler-handler-opts-options-oscrud)
 	- [RegisterService(basePath string, service Service, opts ...Options) *Oscrud](#registerservicebasepath-string-service-service-opts-options-oscrud)
-	- [Endpoint(method, path string, req *Request) TransportResponse](#endpointmethod-path-string-req-request-transportresponse)
 	- [NewRequest(args ...string) *Request](#newrequestargs-string-request)
 	- [Start()](#start)
 - [Request Lifecycle](#request-lifecycle)
@@ -23,9 +22,6 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 	- [Context](#context)
 	- [Request Methods](#request-methods)
 	- [Response Methods](#response-methods)
-	- [Internal Access / Call](#internal-access--call)
-		- [Example](#example-1)
-		- [Transport Implementation](#transport-implementation)
 - [Binder](#binder)
 	- [All Binding](#all-binding)
 	- [Specific Binding](#specific-binding)
@@ -237,22 +233,6 @@ func main() {
 }
 ```
 
-## Endpoint(method, path string, req *Request) TransportResponse
-
-Mainly is for transport implementation purpose, but you can also use it as internal access call.
-
-```go
-server := oscrud.NewOscrud()
-req := oscrud.NewRequest().
-    Transport(t).
-    Context(e).
-    SetBody(body).
-    SetQuery(query).
-    SetHeader(header).
-    SetParam(param)
-res := server.Endpoint("GET", "/test", req)
-```
-
 ## NewRequest(args ...string) *Request
 
 Constructing new request for access endpoint.
@@ -359,56 +339,6 @@ For updating response information like data, headers.
 | Stack(status int, exception error)                          | Response with status, and given error ( stack will be provided ). `errors.WithStack()`.                                                               |
 | End() Context                                               | A signal to tell handler, the flow is reach end already. If `End()` didn't call until end of the handler, will return error `ErrResponseNotComplete`. |
 
-## Internal Access / Call
-
-Mainly is for transport implementation, you can use it on mock tests or other internal access too, we not suggest to call the other `handler func` directly with given `context` unless you know what you're doing. You have to construct with `oscrud.NewRequest()` and pass `request` to `server.Endpoint()`
-
-| Method                                         | Description                    |
-| ---------------------------------------------- | ------------------------------ |
-| SkipAfter() *Request                           | Skip after middleware          |
-| SkipBefore() *Request                          | Skip before middleware         |
-| SkipMiddleware() *Request                      | Skip all middleware            |
-| Transport(trs Transport) *Request              | Set transport for request      |
-| Context(ctx interface{}) *Request              | Set context for request        |
-| SetBody(body map[string]interface{}) *Request  | Set body data for request      |
-| SetParam(body map[string]string) *Request      | Set param data for request     |
-| SetQuery(body map[string]interface{}) *Request | Set query data for request     |
-| SetHeader(body map[string]header) *Request     | Set header data for request    |
-| Header(key string, value string) *Request      | Append header data for request |
-| Query(key string, value interface{}) *Request  | Append query data for request  |
-
-### Example
-
-Example is just for internal access / call, so you must have core struct `oscrud.Server` only you can access.
-
-```go
-server := oscrud.NewOscrud()
-req := oscrud.NewRequest().
-    Transport(t).
-    Context(e).
-    SetBody(body).
-    SetQuery(query).
-    SetHeader(header).
-    SetParam(param)
-res := server.Endpoint("GET", "/test", req)
-```
-
-### Transport Implementation
-
-Transport implementation, based on incoming requests pass required data to request. Then using `handler` parameters to receive response from server.
-
-```go
-func (t *Transport) Register(method string, endpoint string, handler oscrud.TransportHandler) {
-    req := oscrud.NewRequest(method, endpoint).
-        Transport(t).
-        Context(e).
-        SetBody(body).
-        SetQuery(query).
-        SetHeader(header).
-        SetParam(param)
-    res := handler(req)
-}
-```
 
 # Binder
 

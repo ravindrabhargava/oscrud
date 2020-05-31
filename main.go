@@ -1,13 +1,13 @@
 package oscrud
 
 import (
+	"context"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/oscrud/oscrud/util"
-
-	"github.com/gbrlsnchs/radix"
+	uuid "github.com/google/uuid"
+	"github.com/oscrud/binder"
 )
 
 // Oscrud :
@@ -17,18 +17,25 @@ type Oscrud struct {
 	TimeoutOptions
 
 	transports []Transport
-	binder     *Binder
-	router     *radix.Tree
+	routes     []Route
+	logger     []Logger
+	binder     *binder.Binder
 }
 
 // NewOscrud :
 func NewOscrud() *Oscrud {
-	tree := radix.New(radix.Tsafe)
-	tree.SetBoundaries(':', '/')
 	return &Oscrud{
 		transports: make([]Transport, 0),
-		binder:     NewBinder(),
-		router:     tree,
+		routes:     make([]Route, 0),
+		logger:     make([]Logger, 0),
+		binder:     binder.NewBinder(),
+	}
+}
+
+// Log :
+func (server *Oscrud) Log(operation string, content string) {
+	for _, logger := range server.logger {
+		logger.Log(operation, content)
 	}
 }
 
@@ -47,8 +54,8 @@ func (server *Oscrud) UseOptions(opts ...Options) *Oscrud {
 }
 
 // RegisterBinder :
-func (server *Oscrud) RegisterBinder(rtype interface{}, bindFn Bind) *Oscrud {
-	server.binder.Register(rtype, bindFn)
+func (server *Oscrud) RegisterBinder(ftype interface{}, ttype interface{}, bindFn binder.Bind) *Oscrud {
+	server.binder.Register(ftype, ttype, bindFn)
 	return server
 }
 
@@ -62,7 +69,6 @@ func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
 
 // RegisterEndpoint :
 func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud {
-	radix := util.RadixPath(method, endpoint)
 	route := &Route{
 		Method:  strings.ToLower(method),
 		Route:   endpoint,
@@ -79,7 +85,7 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 		}
 	}
 
-	server.router.Add(radix, route)
+	server.routes = append(server.routes, *route)
 	for _, transport := range server.transports {
 		transport.Register(method, endpoint, server.transportHandler(route))
 	}
@@ -102,7 +108,7 @@ func (server *Oscrud) RegisterService(basePath string, service Service, opts ...
 func (server *Oscrud) Start() {
 	for _, trs := range server.transports {
 		go func(t Transport) {
-			err := t.Start(server.transportHandler(nil))
+			err := t.Start()
 			if err != nil {
 				panic(err)
 			}
@@ -119,36 +125,26 @@ func (server *Oscrud) transportHandler(route *Route) TransportHandler {
 }
 
 func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
+
+	if req.requestID == "" {
+		req.requestID = uuid.New().String()
+	}
+
+	if req.context == nil {
+		req.context = context.Background()
+	}
+
 	ctx := Context{
-		method:    req.method,
-		path:      req.path,
-		param:     req.param,
-		header:    req.header,
-		query:     req.query,
-		body:      req.body,
-		transport: "INTERNAL",
+		oscrud:    *server,
+		route:     *route,
+		request:   *req,
 		sent:      false,
 		result:    nil,
 		exception: nil,
-		oscrud:    *server,
-	}
-
-	if route == nil {
-		node, params := server.router.Get(util.RadixPath(req.method, req.path))
-		if node == nil {
-			return ctx.NotFound().End()
-		}
-
-		route = node.Value.(*Route)
-		ctx.param = params
-	}
-
-	if req.transport != nil {
-		ctx.transport = req.transport.Name()
 	}
 
 	gr := make(chan Context, 1)
-	go server.invokeHandler(route, req, ctx, gr)
+	go server.invokeHandler(ctx, gr)
 
 	duration := 30 * time.Second
 	if server.Duration != 0 {
@@ -174,7 +170,15 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	}
 }
 
-func (server *Oscrud) invokeHandler(route *Route, req *Request, ctx Context, gr chan Context) {
+func (server *Oscrud) invokeHandler(ctx Context, gr chan Context) {
+
+	for _, logger := range server.logger {
+		logger.StartRequest(ctx)
+	}
+
+	req := ctx.request
+	route := ctx.route
+
 	// MiddlewareOptions :
 	handlers := make([]Handler, 0)
 	if req.skip != skipMiddleware && req.skip != skipBefore && route.Before != nil {
@@ -204,6 +208,9 @@ func (server *Oscrud) invokeHandler(route *Route, req *Request, ctx Context, gr 
 				go server.OnComplete(ctx)
 			}
 
+			for _, logger := range server.logger {
+				logger.EndRequest(ctx)
+			}
 			gr <- ctx
 			return
 		}

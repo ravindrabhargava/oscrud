@@ -105,6 +105,11 @@ func (c Context) Bind(assign interface{}) error {
 			value = val
 		}
 
+		stag := field.Tag.Get("state")
+		if val, ok := c.request.param[stag]; ok {
+			value = val
+		}
+
 		if value != nil {
 			if err := c.oscrud.binder.Bind(setter.Field(i).Addr().Interface(), value); err != nil {
 				return err
@@ -129,6 +134,7 @@ func (c Context) BindAll(assign interface{}) error {
 		c.request.query,
 		c.request.body,
 		c.request.param,
+		c.request.state,
 	)
 	for i := 0; i < npt.NumField(); i++ {
 		field := npt.Field(i)
@@ -158,6 +164,11 @@ func (c Context) BindAll(assign interface{}) error {
 // Log :
 func (c Context) Log(operation string, content string) {
 	c.oscrud.Log(operation, content)
+}
+
+// SetState :
+func (c Context) SetState(key string, value interface{}) {
+	c.request.State(key, value)
 }
 
 // State :

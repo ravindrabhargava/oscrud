@@ -12,9 +12,13 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 	- [UseOptions(opts ...Options) *Oscrud](#useoptionsopts-options-oscrud)
 	- [RegisterBinder(rtype interface{}, bindFb Bind) *Oscrud](#registerbinderrtype-interface-bindfb-bind-oscrud)
 	- [RegisterTransport(transports ...Transport) *Oscrud](#registertransporttransports-transport-oscrud)
+	- [RegisterLogger(loggers ...Logger) *Oscrud](#registerloggerloggers-logger-oscrud)
 	- [RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud](#registerendpointmethod-endpoint-string-handler-handler-opts-options-oscrud)
 	- [RegisterService(basePath string, service Service, opts ...Options) *Oscrud](#registerservicebasepath-string-service-service-opts-options-oscrud)
-	- [NewRequest(args ...string) *Request](#newrequestargs-string-request)
+	- [NewRequest() *Request](#newrequest-request)
+	- [SetState(key string, value interface{})](#setstatekey-string-value-interface)
+	- [GetState(key string) interface{}](#getstatekey-string-interface)
+	- [Log(operation string, content string)](#logoperation-string-content-string)
 	- [Start()](#start)
 - [Request Lifecycle](#request-lifecycle)
 - [Handler & Context](#handler--context)
@@ -160,6 +164,55 @@ func main() {
 }
 ```
 
+## RegisterLogger(loggers ...Logger) *Oscrud
+
+For register logger for the server. Every request made will be run all logger in goroutine, prevent for slowing down requests.
+
+```go
+package oscrud
+
+// Logger :
+type Logger struct {
+}
+
+// Log :
+func (l Logger) Log(operation string, content string) {
+	log.Println("Operation - ", operation)
+	log.Println("Content - ", content)
+}
+
+// StartRequest :
+func (l Logger) StartRequest(ctx oscrud.Context) {
+	log.Println("**************************************")
+	log.Println("RequestID - ", ctx.RequestID())
+	log.Println("Method - ", ctx.Method())
+	log.Println("Path - ", ctx.Path())
+	log.Println("State - ", ctx.State())
+	log.Println("Header - ", ctx.Headers())
+	log.Println("Query - ", ctx.Query())
+	log.Println("Body - ", ctx.Body())
+	log.Println("**************************************")
+}
+
+// EndRequest :
+func (l Logger) EndRequest(ctx oscrud.Context) {
+	log.Println("**************************************")
+	log.Println("RequestID - ", ctx.RequestID())
+	log.Println("Method - ", ctx.Method())
+	log.Println("Path - ", ctx.Path())
+	log.Println("State - ", ctx.State())
+	log.Println("Header - ", ctx.Headers())
+	log.Println("Query - ", ctx.Query())
+	log.Println("Body - ", ctx.Body())
+	log.Println("**************************************")
+}
+
+func main() {
+	server := oscrud.NewOscrud()
+    server.RegisterLogger(Logger{})
+}
+```
+
 ## RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud 
 
 For registering endpoint with specified method, endpoint & handler, and also able to apply endpoint level options ( mean only work on the specifed endpoint ).
@@ -233,7 +286,7 @@ func main() {
 }
 ```
 
-## NewRequest(args ...string) *Request
+## NewRequest() *Request
 
 Constructing new request for access endpoint.
 
@@ -245,6 +298,29 @@ req := oscrud.NewRequest().
     SetQuery(query).
     SetHeader(header).
     SetParam(param)
+```
+## SetState(key string, value interface{})
+
+Set application level state, you will have it when u have the server instance.
+
+```go
+oscrud.SetState("state", some_state)
+```
+
+## GetState(key string) interface{}
+
+Get application level state, you will have it when u have the server instance.
+
+```go
+state := oscrud.GetState("state")
+```
+
+## Log(operation string, content string) 
+
+Logging some operation with content, server context will run through loggers and call log function.
+
+```go
+oscrud.Log("Request", "request started")
 ```
 
 ## Start()
@@ -266,18 +342,21 @@ Basically a request firstly will come to Transport. Transport will do the basic 
 
 Usually process incoming request and construct request for pass to handler.
 
-2. Timeout Handler
+2. Start Request Logger
+
+3. Timeout Handler
 
 Construct timeout handler & run handler using go-routine. When timeout reach will just return timeout error.
 
-3. Oscrud
+4. Oscrud
 
 Lookup route, if exists construct middleware handler & main handler which required for the route.
 
-4. Before Middleware Handler
-5. Main Handler
-6. After Middleware Handler
-7. Event onComplete()
+5. Before Middleware Handler
+6. Main Handler
+7. After Middleware Handler
+8. Event onComplete()
+9. End Request Logger
 
 # Handler & Context
 
@@ -306,19 +385,22 @@ func main() {
 
 For retrieving data from requests and some data binding.
 
-| Method                         | Description                                                                                                                                  |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Method() string                | Return request method, default to be smaller case `get`, `post`.                                                                             |
-| Get(key string) interface{}    | Get value by key from  `param`, `query`, `body`, `header`, order respectively.                                                               |
-| Context() interface{}          | Get request context, usually will be transport's context instance like `echo.Echo` instance.                                                 |
-| Transport() string             | Get transport name, `INTERNAL` will be default if no transport.                                                                              |
-| Path() string                  | Return request path                                                                                                                          |
-| Headers() map[string]string    | Return request headers                                                                                                                       |
-| Query() map[string]interface{} | Return request queries                                                                                                                       |
-| Params() map[string]string     | Return request params                                                                                                                        |
-| Body() map[string]interface{}  | Return request body                                                                                                                          |
-| Bind(src interface{}) error    | Bind data from `map` specify by `reflect.Tag`. More information please look at [Specific Binding](#specific-binding).                        |
-| BindAll(src interface{}) error | Bind data from `param`, `query`, `body`, `header` based on `json` and `qm` tag. More information please look at [All Binding](#all-binding). |
+| Method                                  | Description                                                                                                                                           |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Method() string                         | Return request method, default to be smaller case `get`, `post`.                                                                                      |
+| Get(key string) interface{}             | Get value by key from  `param`, `query`, `body`, `header`, order respectively.                                                                        |
+| Context() interface{}                   | Get request context, usually will be transport's context instance like `echo.Echo` instance.                                                          |
+| Transport() string                      | Get transport name                                                                                                                                    |
+| Path() string                           | Return request path                                                                                                                                   |
+| RequestID() string                      | Return request id                                                                                                                                     |
+| State() map[string]interface{}          | Return request state                                                                                                                                  |
+| Headers() map[string]string             | Return request headers                                                                                                                                |
+| Query() map[string]interface{}          | Return request queries                                                                                                                                |
+| Params() map[string]string              | Return request params                                                                                                                                 |
+| Body() map[string]interface{}           | Return request body                                                                                                                                   |
+| Bind(src interface{}) error             | Bind data from `map` specify by `reflect.Tag`. More information please look at [Specific Binding](#specific-binding).                                 |
+| BindAll(src interface{}) error          | Bind data from `param`, `query`, `body`, `header`, `state` based on `json` and `qm` tag. More information please look at [All Binding](#all-binding). |
+| SetState(key string, value interface{}) | Set data to request level state                                                                                                                       |
 
 
 ## Response Methods
@@ -365,6 +447,7 @@ Specific binding will bind value based on specified tag. If you want to bind fro
 * `query` will target to Query. 
 * `body` will target to Body. 
 * `param` will target to Param.
+* `state` will target to Request Level State
 
 ```go
 var i struct {
@@ -372,7 +455,8 @@ var i struct {
     IsNew string `query:"isNew"`
     Username string `body:"username"`
     Password string `body:"password"`
-    Id string `param:"id"`
+	Id string `param:"id"`
+	State string `state:"state"`
 }
 
 ctx.Bind(&i)
@@ -515,12 +599,8 @@ func (t *Transport) Register(method string, endpoint string, handler oscrud.Tran
 	// Every endpoint registration will call this method.
 }
 
-func (t *Transport) Start(handler oscrud.TransportHandler) error {
-	// If transport not supported endpoint routing you can implement here
-	req := oscrud.NewRequest(method, endpoint)
-	// handler will look route based on method & endpoint
-	// if no route exists will have error NotFound
-	res :=  handler(req)
+func (t *Transport) Start() error {
+	// Transport start receiving request
 }
 ```
 
@@ -592,11 +672,11 @@ timeout := oscrud.TimeoutOptions{
 
 ## Transport ( Official / Community )
 
-* oscrud-echo
+* oscrud/echo
 
 ## Service ( Official / Community )
 
-* oscrud-sqlike
+* oscrud/sqlike
 
 # Discussion
 

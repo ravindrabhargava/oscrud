@@ -16,6 +16,7 @@ type Oscrud struct {
 	EventOptions
 	TimeoutOptions
 
+	state      map[string]interface{}
 	transports []Transport
 	routes     []Route
 	logger     []Logger
@@ -30,6 +31,16 @@ func NewOscrud() *Oscrud {
 		logger:     make([]Logger, 0),
 		binder:     binder.NewBinder(),
 	}
+}
+
+// SetState :
+func (server *Oscrud) SetState(key string, value interface{}) {
+	server.state[key] = value
+}
+
+// GetState :
+func (server *Oscrud) GetState(key string) interface{} {
+	return server.state[key]
 }
 
 // Log :
@@ -67,11 +78,19 @@ func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
 	return server
 }
 
+// RegisterLogger :
+func (server *Oscrud) RegisterLogger(loggers ...Logger) *Oscrud {
+	for _, logger := range loggers {
+		server.logger = append(server.logger, logger)
+	}
+	return server
+}
+
 // RegisterEndpoint :
 func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud {
 	route := &Route{
 		Method:  strings.ToLower(method),
-		Route:   endpoint,
+		Path:    endpoint,
 		Handler: handler,
 	}
 
@@ -126,6 +145,9 @@ func (server *Oscrud) transportHandler(route *Route) TransportHandler {
 
 func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 
+	req.path = route.Path
+	req.method = route.Method
+
 	if req.requestID == "" {
 		req.requestID = uuid.New().String()
 	}
@@ -136,15 +158,22 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 
 	ctx := Context{
 		oscrud:    *server,
-		route:     *route,
 		request:   *req,
 		sent:      false,
 		result:    nil,
 		exception: nil,
 	}
 
+	for _, logger := range server.logger {
+		logger.StartRequest(ctx)
+	}
+
 	gr := make(chan Context, 1)
-	go server.invokeHandler(ctx, gr)
+	go server.invokeHandler(ctx, req, route, gr)
+
+	for _, logger := range server.logger {
+		logger.EndRequest(ctx)
+	}
 
 	duration := 30 * time.Second
 	if server.Duration != 0 {
@@ -170,15 +199,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	}
 }
 
-func (server *Oscrud) invokeHandler(ctx Context, gr chan Context) {
-
-	for _, logger := range server.logger {
-		logger.StartRequest(ctx)
-	}
-
-	req := ctx.request
-	route := ctx.route
-
+func (server *Oscrud) invokeHandler(ctx Context, req *Request, route *Route, gr chan Context) {
 	// MiddlewareOptions :
 	handlers := make([]Handler, 0)
 	if req.skip != skipMiddleware && req.skip != skipBefore && route.Before != nil {
@@ -208,9 +229,6 @@ func (server *Oscrud) invokeHandler(ctx Context, gr chan Context) {
 				go server.OnComplete(ctx)
 			}
 
-			for _, logger := range server.logger {
-				logger.EndRequest(ctx)
-			}
 			gr <- ctx
 			return
 		}

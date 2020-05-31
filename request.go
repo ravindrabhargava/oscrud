@@ -20,9 +20,9 @@ type Request struct {
 	context   context.Context
 
 	requestID string
-	state     map[string]interface{}
 	method    string
 	path      string
+	state     map[string]interface{}
 	query     map[string]interface{}
 	body      map[string]interface{}
 	param     map[string]string

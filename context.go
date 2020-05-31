@@ -9,7 +9,6 @@ import (
 
 // Context :
 type Context struct {
-	route   Route
 	request Request
 	oscrud  Oscrud
 
@@ -29,11 +28,6 @@ func (c Context) transportResponse() TransportResponse {
 		exception:       c.exception,
 		result:          c.result,
 	}
-}
-
-// Method :
-func (c Context) Method() string {
-	return c.route.Method
 }
 
 // Get :
@@ -56,16 +50,6 @@ func (c Context) Get(key string) interface{} {
 	}
 
 	return nil
-}
-
-// Transport :
-func (c Context) Transport() string {
-	return c.request.transport.Name()
-}
-
-// Path :
-func (c Context) Path() string {
-	return c.route.Path
 }
 
 // Headers :
@@ -169,4 +153,34 @@ func (c Context) BindAll(assign interface{}) error {
 		}
 	}
 	return nil
+}
+
+// Log :
+func (c Context) Log(operation string, content string) {
+	c.oscrud.Log(operation, content)
+}
+
+// State :
+func (c Context) State() map[string]interface{} {
+	return c.request.state
+}
+
+// RequestID  :
+func (c Context) RequestID() string {
+	return c.request.requestID
+}
+
+// Method :
+func (c Context) Method() string {
+	return c.request.method
+}
+
+// Path :
+func (c Context) Path() string {
+	return c.request.path
+}
+
+// Transport :
+func (c Context) Transport() string {
+	return c.request.transport.Name()
 }

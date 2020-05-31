@@ -12,7 +12,6 @@ type Route struct {
 	TimeoutOptions
 
 	Method  string
-	Route   string
 	Path    string
 	Handler Handler
 }

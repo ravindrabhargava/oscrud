@@ -9,25 +9,10 @@ import (
 
 // Context :
 type Context struct {
-	request Request
-	oscrud  Oscrud
-
-	sent            bool
-	contentType     string
-	responseHeaders map[string]string
-	status          int
-	exception       error
-	result          interface{}
-}
-
-func (c Context) transportResponse() TransportResponse {
-	return TransportResponse{
-		contentType:     c.contentType,
-		responseHeaders: c.responseHeaders,
-		status:          c.status,
-		exception:       c.exception,
-		result:          c.result,
-	}
+	oscrud   Oscrud
+	request  Request
+	response Response
+	sent     bool
 }
 
 // Get :

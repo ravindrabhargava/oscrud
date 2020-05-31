@@ -137,9 +137,9 @@ func (server *Oscrud) Start() {
 }
 
 func (server *Oscrud) transportHandler(route *Route) TransportHandler {
-	return func(req *Request) TransportResponse {
+	return func(req *Request) Response {
 		ctx := server.lookupHandler(route, req)
-		return ctx.transportResponse()
+		return ctx.response
 	}
 }
 
@@ -157,23 +157,18 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	}
 
 	ctx := Context{
-		oscrud:    *server,
-		request:   *req,
-		sent:      false,
-		result:    nil,
-		exception: nil,
+		oscrud:   *server,
+		request:  *req,
+		response: Response{},
+		sent:     false,
 	}
 
 	for _, logger := range server.logger {
-		logger.StartRequest(ctx)
+		go logger.StartRequest(ctx)
 	}
 
 	gr := make(chan Context, 1)
 	go server.invokeHandler(ctx, req, route, gr)
-
-	for _, logger := range server.logger {
-		logger.EndRequest(ctx)
-	}
 
 	duration := 30 * time.Second
 	if server.Duration != 0 {
@@ -184,6 +179,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	}
 
 	select {
+	case ctx = <-gr:
 	case <-time.After(duration):
 		gr <- ctx
 
@@ -193,10 +189,13 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 		if server.OnTimeout != nil {
 			return server.OnTimeout(ctx)
 		}
-		return ctx.Error(408, ErrRequestTimeout).End()
-	case ctx = <-gr:
-		return ctx
+		ctx.Error(408, ErrRequestTimeout)
 	}
+
+	for _, logger := range server.logger {
+		go logger.EndRequest(ctx)
+	}
+	return ctx.End()
 }
 
 func (server *Oscrud) invokeHandler(ctx Context, req *Request, route *Route, gr chan Context) {

@@ -26,6 +26,7 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 	- [Context](#context)
 	- [Request Methods](#request-methods)
 	- [Response Methods](#response-methods)
+	- [Response Object](#response-object)
 - [Binder](#binder)
 	- [All Binding](#all-binding)
 	- [Specific Binding](#specific-binding)
@@ -411,7 +412,7 @@ For updating response information like data, headers.
 | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Set(key string, value string) Context                       | Append header to response, will override if key exists                                                                                                |
 | NoContent() Context                                         | Response with status 204, and empty result.                                                                                                           |
-| NotFounf() Context                                          | Response with status 404, and not found error.                                                                                                        |
+| NotFound() Context                                          | Response with status 404, and not found error.                                                                                                        |
 | String(status int, text string) Context                     | Response with status, and raw string. Content type will be set as `text/plain`                                                                        |
 | HTML(status int, html string) Context                       | Response with status, and html string. Content type will be set as `text/html`.                                                                       |
 | JSON(status int, i interface{}) Context                     | Response with status, and interface. Content type will be set as `application/json`.                                                                  |
@@ -420,6 +421,18 @@ For updating response information like data, headers.
 | Error(status int, exception error)                          | Response with status, and given error                                                                                                                 |
 | Stack(status int, exception error)                          | Response with status, and given error ( stack will be provided ). `errors.WithStack()`.                                                               |
 | End() Context                                               | A signal to tell handler, the flow is reach end already. If `End()` didn't call until end of the handler, will return error `ErrResponseNotComplete`. |
+| Response() Response                                         | Return response object                                                                                                                                |
+
+## Response Object
+
+| Method                              | Description                  |
+| ----------------------------------- | ---------------------------- |
+| ContentType() string                | Return response content type |
+| ResponseHeaders() map[string]string | Return response headers      |
+| Status() int                        | Return response status       |
+| Exception() error                   | Return response error        |
+| Result() interface{}                | Return response result       |
+| ErrorMap() map[string]interface{}   | Return pretty error          |
 
 
 # Binder

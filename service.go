@@ -10,12 +10,12 @@ type Service interface {
 	Delete(Context) Context
 }
 
-// DataModel :
-type DataModel interface {
-	ToCreate() interface{}
-	ToUpdate() interface{}
-	ToResult() interface{}
-	ToQuery() interface{}
+// ServiceModel :
+type ServiceModel interface {
+	ToCreate() (interface{}, error)
+	ToUpdate() (interface{}, error)
+	ToResult() (interface{}, error)
+	ToQuery() (interface{}, error)
 }
 
 // Query :

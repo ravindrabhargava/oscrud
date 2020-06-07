@@ -24,7 +24,10 @@ type ServiceOptions struct {
 type ServiceModel interface {
 	ToCreate() (interface{}, error)
 	ToResult() (interface{}, error)
+
+	ToGetQuery() (interface{}, error)
 	ToFindQuery() (interface{}, error)
+	ToPatchQuery() (interface{}, error)
 	ToUpdateQuery() (interface{}, error)
 	ToDeleteQuery() (interface{}, error)
 }

@@ -1,6 +1,7 @@
 package oscrud
 
 import (
+	"context"
 	"reflect"
 	"strings"
 
@@ -35,6 +36,11 @@ func (c Context) Get(key string) interface{} {
 	}
 
 	return nil
+}
+
+// Context :
+func (c Context) Context() context.Context {
+	return c.request.context
 }
 
 // Headers :

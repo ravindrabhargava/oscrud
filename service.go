@@ -25,10 +25,10 @@ type ServiceModel interface {
 	ToCreate() (interface{}, error)
 	ToResult() (interface{}, error)
 
-	ToFindQuery() (interface{}, error)
-	ToPatchQuery() (interface{}, error)
-	ToUpdateQuery() (interface{}, error)
-	ToDeleteQuery() (interface{}, error)
+	ToQuery() (interface{}, error)
+	ToPatch() (interface{}, error)
+	ToUpdate() (interface{}, error)
+	ToDelete() (interface{}, error)
 }
 
 // Query :

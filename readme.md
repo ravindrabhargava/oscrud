@@ -390,7 +390,7 @@ For retrieving data from requests and some data binding.
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Method() string                         | Return request method, default to be smaller case `get`, `post`.                                                                                      |
 | Get(key string) interface{}             | Get value by key from  `param`, `query`, `body`, `header`, order respectively.                                                                        |
-| Context() interface{}                   | Get request context, usually will be transport's context instance like `echo.Echo` instance.                                                          |
+| Context() context.Context               | Get request context                                                                                                                                   |
 | Transport() string                      | Get transport name                                                                                                                                    |
 | Path() string                           | Return request path                                                                                                                                   |
 | RequestID() string                      | Return request id                                                                                                                                     |

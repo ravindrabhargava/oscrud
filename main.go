@@ -112,13 +112,36 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 }
 
 // RegisterService :
-func (server *Oscrud) RegisterService(basePath string, service Service, opts ...Options) *Oscrud {
-	server.RegisterEndpoint("get", basePath, service.Find, opts)
-	server.RegisterEndpoint("post", basePath, service.Create, opts)
-	server.RegisterEndpoint("get", basePath+"/:$id", service.Get, opts)
-	server.RegisterEndpoint("put", basePath+"/:$id", service.Update, opts)
-	server.RegisterEndpoint("patch", basePath+"/:$id", service.Patch, opts)
-	server.RegisterEndpoint("delete", basePath+"/:$id", service.Delete, opts)
+func (server *Oscrud) RegisterService(basePath string, service Service, serviceOptions *ServiceOptions, opts ...Options) *Oscrud {
+
+	if serviceOptions == nil {
+		serviceOptions = new(ServiceOptions)
+	}
+
+	if !serviceOptions.DisableCreate {
+		server.RegisterEndpoint("post", basePath, service.Create, opts)
+	}
+
+	if !serviceOptions.DisableFind {
+		server.RegisterEndpoint("get", basePath, service.Find, opts)
+	}
+
+	if !serviceOptions.DisableGet {
+		server.RegisterEndpoint("get", basePath+"/:$id", service.Get, opts)
+	}
+
+	if !serviceOptions.DisablePatch {
+		server.RegisterEndpoint("patch", basePath+"/:$id", service.Patch, opts)
+	}
+
+	if !serviceOptions.DisableUpdate {
+		server.RegisterEndpoint("put", basePath+"/:$id", service.Update, opts)
+	}
+
+	if !serviceOptions.DisableDelete {
+		server.RegisterEndpoint("delete", basePath+"/:$id", service.Delete, opts)
+	}
+
 	return server
 
 }

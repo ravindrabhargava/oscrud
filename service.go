@@ -10,6 +10,16 @@ type Service interface {
 	Delete(Context) Context
 }
 
+// ServiceOptions :
+type ServiceOptions struct {
+	DisableFind   bool
+	DisableGet    bool
+	DisableCreate bool
+	DisableUpdate bool
+	DisablePatch  bool
+	DisableDelete bool
+}
+
 // ServiceModel :
 type ServiceModel interface {
 	ToCreate() (interface{}, error)

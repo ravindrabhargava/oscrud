@@ -33,7 +33,9 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 	- [Register New Binder](#register-new-binder)
 - [Service](#service)
 	- [Create Own Service](#create-own-service)
-		- [Data Model](#data-model)
+	- [Default Query for Get](#default-query-for-get)
+	- [Default Query for Find](#default-query-for-find)
+	- [Data Model](#data-model)
 - [Transport](#transport)
 	- [Create Own Transport](#create-own-transport)
 - [References & Resources](#references--resources)
@@ -45,6 +47,7 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 		- [TimeoutOptions](#timeoutoptions)
 	- [Transport ( Official / Community )](#transport--official--community-)
 	- [Service ( Official / Community )](#service--official--community-)
+	- [Example ( Official / Community )](#example--official--community-)
 - [Discussion](#discussion)
 	- [PR & Suggestion](#pr--suggestion)
 	- [Issues](#issues)
@@ -468,8 +471,8 @@ var i struct {
     IsNew string `query:"isNew"`
     Username string `body:"username"`
     Password string `body:"password"`
-	Id string `param:"id"`
-	State string `state:"state"`
+    Id string `param:"id"`
+    State string `state:"state"`
 }
 
 ctx.Bind(&i)
@@ -512,8 +515,8 @@ func main() {
 Service has 6 action following [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) standard. Basically service will registering 6 endpoints by default. Currently creating a service may required some basic knowledge on `reflect` package, we trying to minimize usage of reflect when creating own service.
 
 * GET /basePath - Service.Find
-* GET /basePath/:$id - Service.Get
 * POST /basePath - Service.Create
+* GET /basePath/:$id - Service.Get
 * PUT /basePath/:$id - Service.Update
 * PATCH /basePath/:$id - Service.Patch
 * DELETE /basePath/:$id - Service.Delete
@@ -549,48 +552,95 @@ func (service Service) Delete(ctx oscrud.Context) oscrud.Context {
 }
 ```
 
-### Data Model
+## Default Query for Get
+
+`$select` as selecting which field to return from server-side. Example `?$select=Name,Key` will returning Name & Key only.
+
+## Default Query for Find
+
+`$select` as selecting which field to return from server-side. Example `?$select=Name,Key` will returning Name & Key only.
+
+`$order` as order based on desc or asc.
+
+`$cursor` as cursor for pagination based on Service, they will filter by cursor or offset.
+
+`$offset` as offset for pagination based on Service, they will filter by cursor or offset.
+
+`$page` as page for pagination based on Service, they will filter by cursor or offset.
+
+`$limit` as limit for pagination based on Service, they will filter by cursor or offset.
+
+## Data Model
 
 Service model is a model struct usually will be a table from database. Service model must have implmenet method from `oscrud.DataModel`. So when creating own service, we can use method to filter result or returning data even prevent toxic data injection. `$id` tag will automatically assign input value from endpoint, such as `GET /test/:$id` for a `Get` action.
 
-| Method                 | Usage                                                                                                           |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| ToQuery() interface{}  | For returning query syntax based on service requirement, for sqlike is expr cosntruct from their query builder. |
-| ToUpdate() interface{} | For construct model and return for update                                                                       |
-| ToCreate() interface{} | For construct model and return for create                                                                       |
-| ToResult() interface{} | For construct model and return for find / get                                                                   |
+| Method                                      | Usage                                                                                                           |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| ToQuery() (interface{}, error)              | For returning query syntax based on service requirement, for sqlike is expr cosntruct from their query builder. |
+| ToUpdate(ServiceModel) (interface{}, error) | For construct model and return for update                                                                       |
+| ToPatch(ServiceModel) (interface{}, error)  | For construct model and return for patch                                                                        |
+| ToCreate() (interface{}, error)             | For construct model and return for create                                                                       |
+| ToResult() (interface{}, error)             | For construct model and return for find / get                                                                   |
 
 
 ```go
 // User :
 type User struct {
-	Key  int64  `json:"id" qm:"$id"`
-	Name string `json:"name"`
+	Key  *types.Key `json:"-"`
+	ID   string     `json:"id" qm:"$id" sqlike:"-"`
+	Name string     `json:"name"`
 }
 
-func (user User) ToQuery() interface{} {
-	var query interface{}
+// ToCreate :
+func (user *User) ToCreate() (interface{}, error) {
+	user.Key = types.NewIDKey("User", nil)
+	user.Name += "-" + util.RandomString(6)
+	if len(user.Name) > 20 {
+		return nil, errors.New("username have a maximum length 20")
+	}
+	return user, nil
+}
 
-	if user.Key != 0 {
-		query = expr.Equal("Key", user.Key)
+// ToResult :
+func (user *User) ToResult() (interface{}, error) {
+	if user.Key != nil {
+		user.ID = user.Key.ID()
 	}
 
-	return query
+	return user, nil
 }
 
-func (user *User) ToUpdate() interface{} {
-	return user
+// ToQuery :
+func (user *User) ToQuery() (interface{}, error) {
+	if user.ID != "" {
+		return expr.Equal("Key", "User,"+user.ID), nil
+	}
+
+	var query interface{}
+	if user.Name != "" {
+		query = expr.Equal("Name", user.Name)
+	}
+	return query, nil
 }
 
-func (user *User) ToCreate() interface{} {
-	user.Name += "-NEW"
-	return user
+// ToPatch :
+func (user *User) ToPatch(incoming oscrud.ServiceModel) (interface{}, error) {
+	incomingUser := incoming.(*User)
+	user.Name = incomingUser.Name
+	return user, nil
 }
 
-func (user *User) ToResult() interface{} {
-	return user
+// ToUpdate :
+func (user *User) ToUpdate(incoming oscrud.ServiceModel) (interface{}, error) {
+	incomingUser := incoming.(*User)
+	user.Name = incomingUser.Name
+	return user, nil
 }
 
+// ToDelete :
+func (user *User) ToDelete() (interface{}, error) {
+	return user, nil
+}
 ```
 
 # Transport
@@ -685,11 +735,15 @@ timeout := oscrud.TimeoutOptions{
 
 ## Transport ( Official / Community )
 
-* oscrud/echo
+* [oscrud/echo](https://github.com/oscrud/sqlike)
 
 ## Service ( Official / Community )
 
-* oscrud/sqlike
+* [oscrud/sqlike](https://github.com/oscrud/sqlike)
+
+## Example ( Official / Community )
+
+* [oscrud/example](https://github.com/oscrud/example)
 
 # Discussion
 

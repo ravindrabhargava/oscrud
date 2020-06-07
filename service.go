@@ -39,11 +39,9 @@ type Query struct {
 	Limit  int    `query:"$limit"`
 	Order  string `query:"$order"`
 	Select string `query:"$select"`
-	Query  map[string]interface{}
 }
 
 // QueryOne :
 type QueryOne struct {
-	Query  map[string]interface{}
 	Select string `query:"$select"`
 }

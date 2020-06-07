@@ -143,7 +143,6 @@ func (server *Oscrud) RegisterService(basePath string, service Service, serviceO
 	}
 
 	return server
-
 }
 
 // Start :

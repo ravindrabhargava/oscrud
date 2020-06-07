@@ -26,8 +26,8 @@ type ServiceModel interface {
 	ToResult() (interface{}, error)
 
 	ToQuery() (interface{}, error)
-	ToPatch() (interface{}, error)
-	ToUpdate() (interface{}, error)
+	ToPatch(ServiceModel) (interface{}, error)
+	ToUpdate(ServiceModel) (interface{}, error)
 	ToDelete() (interface{}, error)
 }
 

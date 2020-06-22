@@ -15,6 +15,7 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 	- [RegisterLogger(loggers ...Logger) *Oscrud](#registerloggerloggers-logger-oscrud)
 	- [RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud](#registerendpointmethod-endpoint-string-handler-handler-opts-options-oscrud)
 	- [RegisterService(basePath string, service Service, opts ...Options) *Oscrud](#registerservicebasepath-string-service-service-opts-options-oscrud)
+	- [GetTransport(TransportID) (Transport, bool)](#gettransporttransportid-transport-bool)
 	- [NewRequest() *Request](#newrequest-request)
 	- [SetState(key string, value interface{})](#setstatekey-string-value-interface)
 	- [GetState(key string) interface{}](#getstatekey-string-interface)
@@ -45,6 +46,7 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 		- [MiddlewareOptions](#middlewareoptions)
 		- [EventOptions](#eventoptions)
 		- [TimeoutOptions](#timeoutoptions)
+		- [TransportOptions](#transportoptions)
 	- [Transport ( Official / Community )](#transport--official--community-)
 	- [Service ( Official / Community )](#service--official--community-)
 	- [Example ( Official / Community )](#example--official--community-)
@@ -302,9 +304,22 @@ func main() {
 }
 ```
 
+## GetTransport(TransportID) (Transport, bool)
+
+Get transport by id from transport list 
+
+```go
+package oscrud
+
+func main() {
+	server := oscrud.NewOscrud()
+	echo, exists := server.GetTransport(echo.TransportID)
+}
+```
+
 ## NewRequest() *Request
 
-Constructing new request for access endpoint.
+Constructing new request for access endpoint. mainly for transport.
 
 ```go
 req := oscrud.NewRequest().
@@ -315,6 +330,7 @@ req := oscrud.NewRequest().
     SetHeader(header).
     SetParam(param)
 ```
+
 ## SetState(key string, value interface{})
 
 Set application level state, you will have it when u have the server instance.
@@ -406,7 +422,7 @@ For retrieving data from requests and some data binding.
 | Method() string                         | Return request method, default to be smaller case `get`, `post`.                                                                                      |
 | Get(key string) interface{}             | Get value by key from  `param`, `query`, `body`, `header`, order respectively.                                                                        |
 | Context() context.Context               | Get request context                                                                                                                                   |
-| Transport() string                      | Get transport name                                                                                                                                    |
+| Transport() TransportID                 | Get transport name                                                                                                                                    |
 | Path() string                           | Return request path                                                                                                                                   |
 | RequestID() string                      | Return request id                                                                                                                                     |
 | State() map[string]interface{}          | Return request state                                                                                                                                  |
@@ -666,8 +682,12 @@ For creating own transport, you have to implement method from `oscrud.Transport`
 ```go
 type Transport struct {}
 
-func (t *Transport) Name() string {
-	return "TransportName"
+const (
+	TransportName oscrud.TransportID = "TransportName"
+)
+
+func (t *Transport) Name() oscrud.TransportID {
+	return TransportName
 }
 
 func (t *Transport) Register(method string, endpoint string, handler oscrud.TransportHandler) {
@@ -745,9 +765,22 @@ timeout := oscrud.TimeoutOptions{
 }
 ```
 
+### TransportOptions
+
+Transport Options is to limiting endpoint registration for some specified transport. Disabled transport will not receiving that route registeration.
+
+```go
+disable := oscrud.TransportOptions{
+	DisableRegister: map[oscrud.TransportID]bool{
+		echo.TransportID: true,
+	},
+}
+```
+
 ## Transport ( Official / Community )
 
 * [oscrud/echo](https://github.com/oscrud/sqlike)
+* [oscrud/websocket](https://github.com/oscrud/websocket)
 
 ## Service ( Official / Community )
 

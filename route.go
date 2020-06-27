@@ -10,6 +10,7 @@ type Route struct {
 	MiddlewareOptions
 	EventOptions
 	TimeoutOptions
+	TransportOptions
 
 	Method  string
 	Path    string
@@ -34,4 +35,9 @@ type MiddlewareOptions struct {
 // EventOptions :
 type EventOptions struct {
 	OnComplete func(Context)
+}
+
+// TransportOptions :
+type TransportOptions struct {
+	DisableRegister map[TransportID]bool
 }

@@ -183,6 +183,6 @@ func (c Context) Path() string {
 }
 
 // Transport :
-func (c Context) Transport() string {
+func (c Context) Transport() TransportID {
 	return c.request.transport.Name()
 }

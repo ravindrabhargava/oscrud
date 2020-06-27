@@ -17,7 +17,7 @@ type Oscrud struct {
 	TimeoutOptions
 
 	state      map[string]interface{}
-	transports []Transport
+	transports map[TransportID]Transport
 	routes     []Route
 	logger     []Logger
 	binder     *binder.Binder
@@ -26,11 +26,17 @@ type Oscrud struct {
 // NewOscrud :
 func NewOscrud() *Oscrud {
 	return &Oscrud{
-		transports: make([]Transport, 0),
+		transports: make(map[TransportID]Transport),
 		routes:     make([]Route, 0),
 		logger:     make([]Logger, 0),
 		binder:     binder.NewBinder(),
 	}
+}
+
+// GetTransport :
+func (server *Oscrud) GetTransport(key TransportID) (Transport, bool) {
+	t, ok := server.transports[key]
+	return t, ok
 }
 
 // SetState :
@@ -73,7 +79,7 @@ func (server *Oscrud) RegisterBinder(ftype interface{}, ttype interface{}, bindF
 // RegisterTransport :
 func (server *Oscrud) RegisterTransport(transports ...Transport) *Oscrud {
 	for _, transport := range transports {
-		server.transports = append(server.transports, transport)
+		server.transports[transport.Name()] = transport
 	}
 	return server
 }
@@ -104,8 +110,15 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 		}
 	}
 
+	if route.TransportOptions.DisableRegister == nil {
+		route.TransportOptions.DisableRegister = make(map[TransportID]bool)
+	}
+
 	server.routes = append(server.routes, *route)
 	for _, transport := range server.transports {
+		if isDisabled, ok := route.TransportOptions.DisableRegister[transport.Name()]; ok && isDisabled {
+			continue
+		}
 		transport.Register(method, endpoint, server.transportHandler(route))
 	}
 	return server

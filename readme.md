@@ -49,6 +49,7 @@ Oscrud is a golang resftul api wrapper framework. The purpose of the framework i
 		- [TransportOptions](#transportoptions)
 	- [Transport ( Official / Community )](#transport--official--community-)
 	- [Service ( Official / Community )](#service--official--community-)
+	- [General ( Official / Community )](#general--official--community-)
 	- [Example ( Official / Community )](#example--official--community-)
 - [Discussion](#discussion)
 	- [PR & Suggestion](#pr--suggestion)
@@ -785,6 +786,10 @@ disable := oscrud.TransportOptions{
 ## Service ( Official / Community )
 
 * [oscrud/sqlike](https://github.com/oscrud/sqlike)
+
+## General ( Official / Community )
+
+* [oscrud/graphql-handler](https://github.com/oscrud/graphql-handler)
 
 ## Example ( Official / Community )
 

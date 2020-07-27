@@ -136,9 +136,9 @@ func (c Context) BindAll(assign interface{}) error {
 			key = strings.Split(json, ",")[0]
 		}
 
-		qm := field.Tag.Get("qm")
-		if qm != "" {
-			key = qm
+		oscrudTag := field.Tag.Get("oscrud")
+		if oscrudTag != "" {
+			key = oscrudTag
 		}
 
 		if key != "" {

@@ -432,7 +432,7 @@ For retrieving data from requests and some data binding.
 | Params() map[string]string              | Return request params                                                                                                                                 |
 | Body() map[string]interface{}           | Return request body                                                                                                                                   |
 | Bind(src interface{}) error             | Bind data from `map` specify by `reflect.Tag`. More information please look at [Specific Binding](#specific-binding).                                 |
-| BindAll(src interface{}) error          | Bind data from `param`, `query`, `body`, `header`, `state` based on `json` and `qm` tag. More information please look at [All Binding](#all-binding). |
+| BindAll(src interface{}) error          | Bind data from `param`, `query`, `body`, `header`, `state` based on `json` and `oscrud` tag. More information please look at [All Binding](#all-binding). |
 | SetState(key string, value interface{}) | Set data to request level state                                                                                                                       |
 
 
@@ -473,12 +473,12 @@ Binder is for data binding when transform incoming requests data to a specified 
 
 ## All Binding
 
-All binding will get key from `reflect.Tag` and retrieve value from all maps, if exists will bind to struct. `qm` tag have higher priority then `json` so if `qm` tag exists, will take `qm` instead of `json`. Binding struct when calling must have addressable, if not will return error `ErrSourceNotAddressable`.
+All binding will get key from `reflect.Tag` and retrieve value from all maps, if exists will bind to struct. `oscrud` tag have higher priority then `json` so if `oscrud` tag exists, will take `oscrud` instead of `json`. Binding struct when calling must have addressable, if not will return error `ErrSourceNotAddressable`.
 
 ```go
 var i struct {
-    Id string `qm:"id"`
-    Token string `json:"token" qm:"x-authorization"`
+    Id string `oscrud:"id"`
+    Token string `json:"token" oscrud:"x-authorization"`
 }
 
 ctx.BindAll(&i)
@@ -616,7 +616,7 @@ Service model is a model struct usually will be a table from database. Service m
 // User :
 type User struct {
 	Key  *types.Key `json:"-"`
-	ID   string     `json:"id" qm:"$id" sqlike:"-"`
+	ID   string     `json:"id" oscrud:"$id" sqlike:"-"`
 	Name string     `json:"name"`
 }
 

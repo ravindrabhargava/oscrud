@@ -216,21 +216,22 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	select {
 	case ctx = <-gr:
 	case <-time.After(duration):
-		gr <- ctx
-
 		if route.OnTimeout != nil {
-			return route.OnTimeout(ctx)
+			gr <- route.OnTimeout(ctx)
+			break
 		}
 		if server.OnTimeout != nil {
-			return server.OnTimeout(ctx)
+			gr <- server.OnTimeout(ctx)
+			break
 		}
-		ctx.Error(408, ErrRequestTimeout)
+		gr <- ctx.Error(408, ErrRequestTimeout)
+		break
 	}
 
 	for _, logger := range server.logger {
 		go logger.EndRequest(ctx)
 	}
-	return ctx.End()
+	return ctx
 }
 
 func (server *Oscrud) invokeHandler(ctx Context, req *Request, route *Route, gr chan Context) {
@@ -247,26 +248,20 @@ func (server *Oscrud) invokeHandler(ctx Context, req *Request, route *Route, gr 
 	}
 
 	for _, handler := range handlers {
-
 		if len(gr) > 0 {
-			return
+			break
 		}
-
 		ctx = handler(ctx)
-		if ctx.sent {
-			// EventOptions :
-			if route.OnComplete != nil {
-				go route.OnComplete(ctx)
-			}
-
-			if server.OnComplete != nil {
-				go server.OnComplete(ctx)
-			}
-
-			gr <- ctx
-			return
-		}
 	}
-	gr <- ctx.missingEnd()
+
+	if route.OnComplete != nil {
+		go route.OnComplete(ctx)
+	}
+
+	if server.OnComplete != nil {
+		go server.OnComplete(ctx)
+	}
+
+	gr <- ctx
 	return
 }

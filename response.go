@@ -20,7 +20,6 @@ type Response struct {
 // Error Definition
 var (
 	ErrNotFound             = errors.New("endpoint or service not found")
-	ErrResponseNotComplete  = errors.New("response doesn't called end in all handlers")
 	ErrResponseFailed       = errors.New("response doesn't return properly in transport")
 	ErrSourceNotAddressable = errors.New("binder source must be addressable")
 	ErrRequestTimeout       = errors.New("request timeout")
@@ -69,12 +68,6 @@ func (c Response) ErrorMap() map[string]interface{} {
 		err["stack"] = stack[2:]
 	}
 	return err
-}
-
-func (c Context) missingEnd() Context {
-	c.response.status = 404
-	c.response.exception = ErrResponseNotComplete
-	return c
 }
 
 // Response :
@@ -146,12 +139,6 @@ func (c Context) Error(status int, exception error) Context {
 func (c Context) Stack(status int, exception error) Context {
 	c.response.status = status
 	c.response.exception = errs.WithStack(exception)
-	return c
-}
-
-// End :
-func (c Context) End() Context {
-	c.sent = true
 	return c
 }
 

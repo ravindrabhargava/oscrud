@@ -48,15 +48,18 @@ type QueryOne struct {
 
 // ServiceMeta :
 type ServiceMeta struct {
-	Cursor     string `json:"cursor,omitempty" xml:"cursor"`
-	Limit      string `json:"perPage,omitempty" xml:"perPage"`
-	Page       string `json:"currentPage,omitempty" xml:"currentPage"`
-	Total      string `json:"total,omitempty" xml:"total"`
-	TotalPages string `json:"totalPages,omitempty" xml:"totalPages"`
+	Cursor     string `json:"cursor,omitempty" xml:"cursor,omitempty"`
+	Limit      int    `json:"perPage,omitempty" xml:"perPage,omitempty"`
+	Total      int    `json:"total,omitempty" xml:"total,omitempty"`
+	TotalPages int    `json:"totalPages,omitempty" xml:"totalPages,omitempty"`
+
+	CurrentPage  int `json:"currentPage,omitempty" xml:"currentPage,omitempty"`
+	NextPage     int `json:"nextPage,omitempty" xml:"nextPage,omitempty"`
+	PreviousPage int `json:"prevPage,omitempty" xml:"prevPage,omitempty"`
 }
 
 // ServiceResult :
 type ServiceResult struct {
-	Meta   ServiceMeta `json:"meta" xml:"meta"`
-	Result interface{} `json:"result" xml:"result"`
+	Meta   ServiceMeta `json:"meta,omitempty" xml:"meta,omitempty"`
+	Result interface{} `json:"result,omitempty" xml:"result,omitempty"`
 }

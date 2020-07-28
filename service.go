@@ -45,3 +45,18 @@ type Query struct {
 type QueryOne struct {
 	Select string `query:"$select"`
 }
+
+// ServiceMeta :
+type ServiceMeta struct {
+	Cursor     string `json:"cursor,omitempty" xml:"cursor"`
+	Limit      string `json:"perPage,omitempty" xml:"perPage"`
+	Page       string `json:"currentPage,omitempty" xml:"currentPage"`
+	Total      string `json:"total,omitempty" xml:"total"`
+	TotalPages string `json:"totalPages,omitempty" xml:"totalPages"`
+}
+
+// ServiceResult :
+type ServiceResult struct {
+	Meta   ServiceMeta `json:"meta" xml:"meta"`
+	Result interface{} `json:"result" xml:"result"`
+}

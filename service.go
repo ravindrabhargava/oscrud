@@ -60,6 +60,6 @@ type ServiceMeta struct {
 
 // ServiceResult :
 type ServiceResult struct {
-	Meta   ServiceMeta `json:"meta,omitempty" xml:"meta,omitempty"`
-	Result interface{} `json:"result,omitempty" xml:"result,omitempty"`
+	Meta   *ServiceMeta `json:"meta,omitempty" xml:"meta,omitempty"`
+	Result interface{}  `json:"result,omitempty" xml:"result,omitempty"`
 }

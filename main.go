@@ -94,6 +94,10 @@ func (server *Oscrud) RegisterLogger(loggers ...Logger) *Oscrud {
 
 // RegisterEndpoint :
 func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler, opts ...Options) *Oscrud {
+	if len(server.transports) == 0 {
+		panic("oscrud: register endpoint should be called after registered transports")
+	}
+
 	route := &Route{
 		Method:  strings.ToLower(method),
 		Path:    endpoint,
@@ -230,6 +234,10 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 
 	for _, logger := range server.logger {
 		go logger.EndRequest(ctx)
+	}
+
+	if ctx.response.status == 0 {
+		return ctx.NoContent()
 	}
 	return ctx
 }

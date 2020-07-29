@@ -20,6 +20,7 @@ type Request struct {
 	context   context.Context
 
 	requestID string
+	host      string
 	method    string
 	path      string
 	state     map[string]interface{}
@@ -102,6 +103,12 @@ func (req *Request) SetHeader(header map[string]string) *Request {
 // SetState :
 func (req *Request) SetState(state map[string]interface{}) *Request {
 	req.state = state
+	return req
+}
+
+// SetHost :
+func (req *Request) SetHost(host string) *Request {
+	req.host = host
 	return req
 }
 

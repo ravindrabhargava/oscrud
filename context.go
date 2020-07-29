@@ -172,6 +172,11 @@ func (c Context) RequestID() string {
 	return c.request.requestID
 }
 
+// Host :
+func (c Context) Host() string {
+	return c.request.host
+}
+
 // Method :
 func (c Context) Method() string {
 	return c.request.method

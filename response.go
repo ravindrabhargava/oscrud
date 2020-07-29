@@ -19,10 +19,10 @@ type Response struct {
 
 // Error Definition
 var (
-	ErrNotFound             = errors.New("endpoint or service not found")
-	ErrResponseFailed       = errors.New("response doesn't return properly in transport")
-	ErrSourceNotAddressable = errors.New("binder source must be addressable")
-	ErrRequestTimeout       = errors.New("request timeout")
+	ErrNotFound             = errors.New("oscrud: endpoint or service not found")
+	ErrResponseFailed       = errors.New("oscrud: response doesn't return properly in transport")
+	ErrSourceNotAddressable = errors.New("oscrud: binder source must be addressable")
+	ErrRequestTimeout       = errors.New("oscrud: request timeout")
 )
 
 // ContentType Definition

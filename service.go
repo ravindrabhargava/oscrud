@@ -20,22 +20,23 @@ type ServiceOptions struct {
 	DisableDelete bool
 }
 
-type serviceAction string
+// ServiceAction :
+type ServiceAction string
 
 // ServiceActions :
 var (
-	ServiceActionCreate serviceAction = "CREATE"
-	ServiceActionFind   serviceAction = "FIND"
-	ServiceActionGet    serviceAction = "GET"
-	ServiceActionUpdate serviceAction = "UPDATE"
-	ServiceActionPatch  serviceAction = "PATCH"
-	ServiceActionDelete serviceAction = "DELETE"
+	ServiceActionCreate ServiceAction = "CREATE"
+	ServiceActionFind   ServiceAction = "FIND"
+	ServiceActionGet    ServiceAction = "GET"
+	ServiceActionUpdate ServiceAction = "UPDATE"
+	ServiceActionPatch  ServiceAction = "PATCH"
+	ServiceActionDelete ServiceAction = "DELETE"
 )
 
 // ServiceModel :
 type ServiceModel interface {
-	ToResult(serviceAction) (interface{}, error)
-	ToQuery(serviceAction) (interface{}, error)
+	ToResult(ServiceAction) (interface{}, error)
+	ToQuery(ServiceAction) (interface{}, error)
 	ToCreate() error
 	ToDelete() error
 	ToPatch(ServiceModel) error

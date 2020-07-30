@@ -144,19 +144,19 @@ func (server *Oscrud) RegisterService(basePath string, service Service, serviceO
 	}
 
 	if !serviceOptions.DisableGet {
-		server.RegisterEndpoint("get", basePath+"/:$id", service.Get, opts)
+		server.RegisterEndpoint("get", basePath+"/:id", serviceHandler(service.Get), opts)
 	}
 
 	if !serviceOptions.DisablePatch {
-		server.RegisterEndpoint("patch", basePath+"/:$id", service.Patch, opts)
+		server.RegisterEndpoint("patch", basePath+"/:id", serviceHandler(service.Patch), opts)
 	}
 
 	if !serviceOptions.DisableUpdate {
-		server.RegisterEndpoint("put", basePath+"/:$id", service.Update, opts)
+		server.RegisterEndpoint("put", basePath+"/:id", serviceHandler(service.Update), opts)
 	}
 
 	if !serviceOptions.DisableDelete {
-		server.RegisterEndpoint("delete", basePath+"/:$id", service.Delete, opts)
+		server.RegisterEndpoint("delete", basePath+"/:id", serviceHandler(service.Delete), opts)
 	}
 
 	return server

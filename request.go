@@ -126,6 +126,12 @@ func (req *Request) SetForm(form url.Values) *Request {
 	return req
 }
 
+// SetFiles :
+func (req *Request) SetFiles(files map[string][]*multipart.FileHeader) *Request {
+	req.files = files
+	return req
+}
+
 // SetHost :
 func (req *Request) SetHost(host string) *Request {
 	req.host = host

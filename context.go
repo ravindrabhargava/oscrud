@@ -2,6 +2,7 @@ package oscrud
 
 import (
 	"context"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -34,6 +35,9 @@ func (c Context) Get(key string) interface{} {
 	if val, ok := c.request.header[key]; ok {
 		return val
 	}
+	if val, ok := c.request.form[key]; ok {
+		return val
+	}
 
 	return nil
 }
@@ -61,6 +65,11 @@ func (c Context) Params() map[string]string {
 // Body :
 func (c Context) Body() map[string]interface{} {
 	return c.request.body
+}
+
+// Form :
+func (c Context) Form() url.Values {
+	return c.request.form
 }
 
 // Bind :
@@ -101,6 +110,11 @@ func (c Context) Bind(assign interface{}) error {
 			value = val
 		}
 
+		ftag := field.Tag.Get("form")
+		if val, ok := c.request.param[ftag]; ok {
+			value = val
+		}
+
 		if value != nil {
 			if err := c.oscrud.binder.Bind(setter.Field(i).Addr().Interface(), value); err != nil {
 				return err
@@ -126,6 +140,7 @@ func (c Context) BindAll(assign interface{}) error {
 		c.request.body,
 		c.request.param,
 		c.request.state,
+		c.request.form,
 	)
 	for i := 0; i < npt.NumField(); i++ {
 		field := npt.Field(i)

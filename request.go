@@ -2,6 +2,9 @@ package oscrud
 
 import (
 	"context"
+	"fmt"
+	"mime/multipart"
+	"net/url"
 
 	"github.com/google/uuid"
 )
@@ -19,16 +22,20 @@ type Request struct {
 	transport Transport
 	context   context.Context
 
-	requestID string
-	host      string
-	method    string
-	path      string
-	state     map[string]interface{}
-	query     map[string]interface{}
-	body      map[string]interface{}
-	param     map[string]string
-	header    map[string]string
-	skip      string
+	requestID   string
+	host        string
+	method      string
+	path        string
+	form        url.Values
+	files       map[string][]*multipart.FileHeader
+	formHandler func(bool) error
+	fileHandler func() (*multipart.FileHeader, error)
+	state       map[string]interface{}
+	query       map[string]interface{}
+	body        map[string]interface{}
+	param       map[string]string
+	header      map[string]string
+	skip        string
 }
 
 // NewRequest :
@@ -37,11 +44,18 @@ func NewRequest() *Request {
 		transport: nil,
 		requestID: uuid.New().String(),
 		skip:      skipNone,
+		form:      url.Values{},
 		state:     make(map[string]interface{}),
 		query:     make(map[string]interface{}),
 		body:      make(map[string]interface{}),
 		param:     make(map[string]string),
 		header:    make(map[string]string),
+		formHandler: func(mutlipart bool) error {
+			return ErrFormNotSupported
+		},
+		fileHandler: func() (*multipart.FileHeader, error) {
+			return nil, ErrMultipartNotSupported
+		},
 	}
 	return req
 }
@@ -106,6 +120,12 @@ func (req *Request) SetState(state map[string]interface{}) *Request {
 	return req
 }
 
+// SetForm :
+func (req *Request) SetForm(form url.Values) *Request {
+	req.form = form
+	return req
+}
+
 // SetHost :
 func (req *Request) SetHost(host string) *Request {
 	req.host = host
@@ -133,5 +153,32 @@ func (req *Request) Param(key string, value string) *Request {
 // State :
 func (req *Request) State(key string, value interface{}) *Request {
 	req.state[key] = value
+	return req
+}
+
+// Form :
+func (req *Request) Form(key string, value interface{}) *Request {
+	req.form.Set(key, fmt.Sprintf("%v", value))
+	return req
+}
+
+// File :
+func (req *Request) File(key string, file *multipart.FileHeader) *Request {
+	if _, ok := req.files[key]; !ok {
+		req.files[key] = make([]*multipart.FileHeader, 0)
+	}
+	req.files[key] = append(req.files[key], file)
+	return req
+}
+
+// FileHandler :
+func (req *Request) FileHandler(handler func() (*multipart.FileHeader, error)) *Request {
+	req.fileHandler = handler
+	return req
+}
+
+// FormHandler :
+func (req *Request) FormHandler(handler func(bool) error) *Request {
+	req.formHandler = handler
 	return req
 }

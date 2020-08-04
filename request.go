@@ -29,7 +29,7 @@ type Request struct {
 	form        url.Values
 	files       map[string][]*multipart.FileHeader
 	formHandler func(bool) error
-	fileHandler func() (*multipart.FileHeader, error)
+	fileHandler func(key string) (*multipart.FileHeader, error)
 	state       map[string]interface{}
 	query       map[string]interface{}
 	body        map[string]interface{}
@@ -53,7 +53,7 @@ func NewRequest() *Request {
 		formHandler: func(mutlipart bool) error {
 			return ErrFormNotSupported
 		},
-		fileHandler: func() (*multipart.FileHeader, error) {
+		fileHandler: func(key string) (*multipart.FileHeader, error) {
 			return nil, ErrMultipartNotSupported
 		},
 	}
@@ -172,7 +172,7 @@ func (req *Request) File(key string, file *multipart.FileHeader) *Request {
 }
 
 // FileHandler :
-func (req *Request) FileHandler(handler func() (*multipart.FileHeader, error)) *Request {
+func (req *Request) FileHandler(handler func(key string) (*multipart.FileHeader, error)) *Request {
 	req.fileHandler = handler
 	return req
 }

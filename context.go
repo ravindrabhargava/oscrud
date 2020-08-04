@@ -2,6 +2,7 @@ package oscrud
 
 import (
 	"context"
+	"mime/multipart"
 	"net/url"
 	"reflect"
 	"strings"
@@ -35,11 +36,22 @@ func (c Context) Get(key string) interface{} {
 	if val, ok := c.request.header[key]; ok {
 		return val
 	}
+
 	if val, ok := c.request.form[key]; ok {
 		return val
 	}
 
 	return nil
+}
+
+// ParseForm :
+func (c Context) ParseForm(multipart bool) error {
+	return c.request.formHandler(multipart)
+}
+
+// File :
+func (c Context) File(key string) (*multipart.FileHeader, error) {
+	return c.request.fileHandler(key)
 }
 
 // Context :

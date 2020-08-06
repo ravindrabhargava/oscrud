@@ -169,7 +169,7 @@ func (c Context) BindAll(assign interface{}) error {
 		}
 
 		if key != "" {
-			if value, ok := values[key]; ok {
+			if value, ok := values[key]; ok && value != nil {
 				if err := c.oscrud.binder.Bind(setter.Field(i).Addr().Interface(), value); err != nil {
 					return err
 				}

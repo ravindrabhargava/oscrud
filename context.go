@@ -2,6 +2,7 @@ package oscrud
 
 import (
 	"context"
+	"encoding/json"
 	"mime/multipart"
 	"net/url"
 	"reflect"
@@ -84,6 +85,11 @@ func (c Context) Form() url.Values {
 	return c.request.form
 }
 
+// BinderSetting :
+type BinderSetting struct {
+	UseJSON bool
+}
+
 // Bind :
 func (c Context) Bind(assign interface{}) error {
 	t := reflect.TypeOf(assign)
@@ -138,14 +144,12 @@ func (c Context) Bind(assign interface{}) error {
 }
 
 // BindAll :
-func (c Context) BindAll(assign interface{}) error {
+func (c Context) BindAll(assign interface{}, setting ...BinderSetting) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
 		return ErrSourceNotAddressable
 	}
 
-	setter := reflect.ValueOf(assign).Elem()
-	npt := t.Elem()
 	values := util.MergeMaps(
 		c.request.header,
 		c.request.query,
@@ -154,6 +158,17 @@ func (c Context) BindAll(assign interface{}) error {
 		c.request.state,
 		c.request.form,
 	)
+
+	if len(setting) > 0 && setting[0].UseJSON {
+		bytes, err := json.Marshal(values)
+		if err != nil {
+			return err
+		}
+		return json.Unmarshal(bytes, assign)
+	}
+
+	setter := reflect.ValueOf(assign).Elem()
+	npt := t.Elem()
 	for i := 0; i < npt.NumField(); i++ {
 		field := npt.Field(i)
 		var key string

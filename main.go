@@ -26,6 +26,7 @@ type Oscrud struct {
 // NewOscrud :
 func NewOscrud() *Oscrud {
 	return &Oscrud{
+		state:      make(map[string]interface{}),
 		transports: make(map[TransportID]Transport),
 		routes:     make([]Route, 0),
 		logger:     make([]Logger, 0),

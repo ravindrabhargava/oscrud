@@ -204,6 +204,11 @@ func (c Context) SetState(key string, value interface{}) {
 	c.request.State(key, value)
 }
 
+// GetState :
+func (c Context) GetState(key string) interface{} {
+	return c.request.state[key]
+}
+
 // State :
 func (c Context) State() map[string]interface{} {
 	return c.request.state
@@ -232,4 +237,9 @@ func (c Context) Path() string {
 // Transport :
 func (c Context) Transport() TransportID {
 	return c.request.transport.Name()
+}
+
+// Oscrud :
+func (c Context) Oscrud() Oscrud {
+	return c.oscrud
 }

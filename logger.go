@@ -2,7 +2,7 @@ package oscrud
 
 // Logger :
 type Logger interface {
-	StartRequest(Context)
+	StartRequest(*Context)
 	Log(operation string, content string)
-	EndRequest(Context)
+	EndRequest(*Context)
 }

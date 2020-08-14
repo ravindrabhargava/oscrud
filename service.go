@@ -2,12 +2,12 @@ package oscrud
 
 // Service :
 type Service interface {
-	Find(Context) Context
-	Create(Context) Context
-	Get(string, Context) Context
-	Update(string, Context) Context
-	Patch(string, Context) Context
-	Delete(string, Context) Context
+	Find(*Context) *Context
+	Create(*Context) *Context
+	Get(string, *Context) *Context
+	Update(string, *Context) *Context
+	Patch(string, *Context) *Context
+	Delete(string, *Context) *Context
 }
 
 // ServiceOptions :
@@ -44,8 +44,8 @@ type ServiceModel interface {
 }
 
 // transforms id endpoint to proper oscrud handler
-func serviceHandler(handler func(string, Context) Context) Handler {
-	return func(ctx Context) Context {
+func serviceHandler(handler func(string, *Context) *Context) Handler {
+	return func(ctx *Context) *Context {
 		var i struct {
 			ID string `param:"id"`
 		}

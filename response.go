@@ -3,6 +3,7 @@ package oscrud
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	errs "github.com/pkg/errors"
@@ -73,19 +74,19 @@ func (c Response) ErrorMap() map[string]interface{} {
 }
 
 // Response :
-func (c Context) Response() Response {
+func (c *Context) Response() Response {
 	return c.response
 }
 
 // NoContent :
-func (c Context) NoContent() Context {
-	c.response.status = 204
+func (c *Context) NoContent() *Context {
+	c.response.status = http.StatusNoContent
 	c.response.result = nil
 	return c
 }
 
 // String :
-func (c Context) String(status int, text string) Context {
+func (c *Context) String(status int, text string) *Context {
 	c.response.status = status
 	c.response.result = text
 	c.response.contentType = ContentTypePlainText
@@ -93,7 +94,7 @@ func (c Context) String(status int, text string) Context {
 }
 
 // HTML :
-func (c Context) HTML(status int, html string) Context {
+func (c *Context) HTML(status int, html string) *Context {
 	c.response.status = status
 	c.response.result = html
 	c.response.contentType = ContentTypeHTML
@@ -101,7 +102,7 @@ func (c Context) HTML(status int, html string) Context {
 }
 
 // JSON :
-func (c Context) JSON(status int, i interface{}) Context {
+func (c *Context) JSON(status int, i interface{}) *Context {
 	c.response.status = status
 	c.response.result = i
 	c.response.contentType = ContentTypeJSON
@@ -109,7 +110,7 @@ func (c Context) JSON(status int, i interface{}) Context {
 }
 
 // XML :
-func (c Context) XML(status int, i interface{}) Context {
+func (c *Context) XML(status int, i interface{}) *Context {
 	c.response.status = status
 	c.response.result = i
 	c.response.contentType = ContentTypeXML
@@ -117,7 +118,7 @@ func (c Context) XML(status int, i interface{}) Context {
 }
 
 // Send :
-func (c Context) Send(status int, contentType string, i interface{}) Context {
+func (c *Context) Send(status int, contentType string, i interface{}) *Context {
 	c.response.status = status
 	c.response.result = i
 	c.response.contentType = contentType
@@ -125,27 +126,27 @@ func (c Context) Send(status int, contentType string, i interface{}) Context {
 }
 
 // Set :
-func (c Context) Set(key string, value string) Context {
+func (c *Context) Set(key string, value string) *Context {
 	c.response.responseHeaders[key] = value
 	return c
 }
 
 // Error :
-func (c Context) Error(status int, exception error) Context {
+func (c *Context) Error(status int, exception error) *Context {
 	c.response.status = status
 	c.response.exception = exception
 	return c
 }
 
 // Stack :
-func (c Context) Stack(status int, exception error) Context {
+func (c *Context) Stack(status int, exception error) *Context {
 	c.response.status = status
 	c.response.exception = errs.WithStack(exception)
 	return c
 }
 
 // NotFound :
-func (c Context) NotFound() Context {
+func (c *Context) NotFound() *Context {
 	c.response.status = 404
 	c.response.exception = errs.WithStack(ErrNotFound)
 	return c

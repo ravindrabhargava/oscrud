@@ -147,7 +147,7 @@ func (c *Context) Stack(status int, exception error) *Context {
 
 // NotFound :
 func (c *Context) NotFound() *Context {
-	c.response.status = 404
+	c.response.status = http.StatusNotFound
 	c.response.exception = errs.WithStack(ErrNotFound)
 	return c
 }

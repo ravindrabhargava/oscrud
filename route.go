@@ -3,7 +3,7 @@ package oscrud
 import "time"
 
 // Handler :
-type Handler func(Context) Context
+type Handler func(*Context) *Context
 
 // Route :
 type Route struct {
@@ -23,7 +23,7 @@ type Options interface{}
 // TimeoutOptions :
 type TimeoutOptions struct {
 	Duration  time.Duration
-	OnTimeout func(Context) Context
+	OnTimeout Handler
 }
 
 // MiddlewareOptions :
@@ -34,7 +34,7 @@ type MiddlewareOptions struct {
 
 // EventOptions :
 type EventOptions struct {
-	OnComplete func(Context)
+	OnComplete func(*Context)
 }
 
 // TransportOptions :

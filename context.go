@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/oscrud/oscrud/util"
+	"golang.org/x/sync/errgroup"
 )
 
 // Context :
@@ -17,10 +18,11 @@ type Context struct {
 	request  Request
 	response Response
 	sent     bool
+	routine  *errgroup.Group
 }
 
 // Get :
-func (c Context) Get(key string) interface{} {
+func (c *Context) Get(key string) interface{} {
 
 	if val, ok := c.request.param[key]; ok {
 		return val
@@ -46,42 +48,42 @@ func (c Context) Get(key string) interface{} {
 }
 
 // ParseForm :
-func (c Context) ParseForm(multipart bool) error {
+func (c *Context) ParseForm(multipart bool) error {
 	return c.request.formHandler(multipart)
 }
 
 // File :
-func (c Context) File(key string) (*multipart.FileHeader, error) {
+func (c *Context) File(key string) (*multipart.FileHeader, error) {
 	return c.request.fileHandler(key)
 }
 
 // Context :
-func (c Context) Context() context.Context {
+func (c *Context) Context() context.Context {
 	return c.request.context
 }
 
 // Headers :
-func (c Context) Headers() map[string]string {
+func (c *Context) Headers() map[string]string {
 	return c.request.header
 }
 
 // Query :
-func (c Context) Query() map[string]interface{} {
+func (c *Context) Query() map[string]interface{} {
 	return c.request.query
 }
 
 // Params :
-func (c Context) Params() map[string]string {
+func (c *Context) Params() map[string]string {
 	return c.request.param
 }
 
 // Body :
-func (c Context) Body() map[string]interface{} {
+func (c *Context) Body() map[string]interface{} {
 	return c.request.body
 }
 
 // Form :
-func (c Context) Form() url.Values {
+func (c *Context) Form() url.Values {
 	return c.request.form
 }
 
@@ -91,7 +93,7 @@ type BinderSetting struct {
 }
 
 // Bind :
-func (c Context) Bind(assign interface{}) error {
+func (c *Context) Bind(assign interface{}) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
 		return ErrSourceNotAddressable
@@ -144,7 +146,7 @@ func (c Context) Bind(assign interface{}) error {
 }
 
 // BindAll :
-func (c Context) BindAll(assign interface{}, setting ...BinderSetting) error {
+func (c *Context) BindAll(assign interface{}, setting ...BinderSetting) error {
 	t := reflect.TypeOf(assign)
 	if t.Kind() != reflect.Ptr && t.Elem().Kind() != reflect.Struct {
 		return ErrSourceNotAddressable
@@ -195,17 +197,17 @@ func (c Context) BindAll(assign interface{}, setting ...BinderSetting) error {
 }
 
 // Log :
-func (c Context) Log(operation string, content string) {
+func (c *Context) Log(operation string, content string) {
 	c.oscrud.Log(operation, content)
 }
 
 // SetState :
-func (c Context) SetState(key string, value interface{}) {
+func (c *Context) SetState(key string, value interface{}) {
 	c.request.State(key, value)
 }
 
 // GetState :
-func (c Context) GetState(key string) interface{} {
+func (c *Context) GetState(key string) interface{} {
 	if val, ok := c.request.state[key]; ok {
 		return val
 	}
@@ -213,31 +215,37 @@ func (c Context) GetState(key string) interface{} {
 }
 
 // State :
-func (c Context) State() map[string]interface{} {
+func (c *Context) State() map[string]interface{} {
 	return c.request.state
 }
 
 // RequestID  :
-func (c Context) RequestID() string {
+func (c *Context) RequestID() string {
 	return c.request.requestID
 }
 
 // Host :
-func (c Context) Host() string {
+func (c *Context) Host() string {
 	return c.request.host
 }
 
 // Method :
-func (c Context) Method() string {
+func (c *Context) Method() string {
 	return c.request.method
 }
 
 // Path :
-func (c Context) Path() string {
+func (c *Context) Path() string {
 	return c.request.path
 }
 
 // Transport :
-func (c Context) Transport() TransportID {
+func (c *Context) Transport() TransportID {
 	return c.request.transport.Name()
+}
+
+// Task :
+func (c *Context) Task(fn func() error) *Context {
+	c.routine.Go(fn)
+	return c
 }

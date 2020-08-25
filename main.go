@@ -2,12 +2,14 @@ package oscrud
 
 import (
 	"context"
+	"net/http"
 	"reflect"
 	"strings"
 	"time"
 
 	uuid "github.com/google/uuid"
 	"github.com/oscrud/binder"
+	"golang.org/x/sync/errgroup"
 )
 
 // Oscrud :
@@ -183,7 +185,7 @@ func (server *Oscrud) transportHandler(route *Route) TransportHandler {
 	}
 }
 
-func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
+func (server *Oscrud) lookupHandler(route *Route, req *Request) *Context {
 
 	req.path = route.Path
 	req.method = route.Method
@@ -196,18 +198,22 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 		req.context = context.Background()
 	}
 
-	ctx := Context{
-		oscrud:   *server,
-		request:  *req,
-		response: Response{},
-		sent:     false,
+	ctx := new(Context)
+	ctx.oscrud = *server
+	ctx.request = *req
+	ctx.response = Response{}
+	ctx.sent = false
+	if req.context != nil {
+		ctx.routine, req.context = errgroup.WithContext(req.context)
+	} else {
+		ctx.routine, req.context = errgroup.WithContext(context.Background())
 	}
 
 	for _, logger := range server.logger {
 		go logger.StartRequest(ctx)
 	}
 
-	gr := make(chan Context, 1)
+	gr := make(chan *Context, 1)
 	go server.invokeHandler(ctx, req, route, gr)
 
 	duration := 30 * time.Second
@@ -229,7 +235,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 			gr <- server.OnTimeout(ctx)
 			break
 		}
-		gr <- ctx.Error(408, ErrRequestTimeout)
+		gr <- ctx.Error(http.StatusRequestTimeout, ErrRequestTimeout)
 		break
 	}
 
@@ -243,7 +249,7 @@ func (server *Oscrud) lookupHandler(route *Route, req *Request) Context {
 	return ctx
 }
 
-func (server *Oscrud) invokeHandler(ctx Context, req *Request, route *Route, gr chan Context) {
+func (server *Oscrud) invokeHandler(ctx *Context, req *Request, route *Route, gr chan *Context) {
 	// MiddlewareOptions :
 	handlers := make([]Handler, 0)
 	if req.skip != skipMiddleware && req.skip != skipBefore && route.Before != nil {
@@ -261,6 +267,10 @@ func (server *Oscrud) invokeHandler(ctx Context, req *Request, route *Route, gr 
 			break
 		}
 		ctx = handler(ctx)
+	}
+
+	if err := ctx.routine.Wait(); err != nil {
+		ctx.Error(http.StatusConflict, err)
 	}
 
 	if route.OnComplete != nil {

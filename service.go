@@ -35,12 +35,12 @@ var (
 
 // ServiceModel :
 type ServiceModel interface {
-	ToResult(Context, ServiceAction) (interface{}, error)
-	ToQuery(Context, ServiceAction) (interface{}, error)
-	ToCreate(Context) error
-	ToDelete(Context) error
-	ToPatch(Context, ServiceModel) error
-	ToUpdate(Context, ServiceModel) error
+	ToResult(*Context, ServiceAction) (interface{}, error)
+	ToQuery(*Context, ServiceAction) (interface{}, error)
+	ToCreate(*Context) error
+	ToDelete(*Context) error
+	ToPatch(*Context, ServiceModel) error
+	ToUpdate(*Context, ServiceModel) error
 }
 
 // transforms id endpoint to proper oscrud handler

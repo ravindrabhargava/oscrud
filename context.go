@@ -249,3 +249,8 @@ func (c *Context) Task(fn func() error) *Context {
 	c.routine.Go(fn)
 	return c
 }
+
+// GetTransport :
+func (c *Context) GetTransport(key TransportID) (Transport, bool) {
+	return c.oscrud.GetTransport(key)
+}

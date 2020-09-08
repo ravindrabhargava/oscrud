@@ -8,5 +8,6 @@ func main() {
 	server := oscrud.NewOscrud()
 	server.RegisterEndpoint("GET", "/example", Example)
 	server.RegisterEndpoint("GET", "/goroutine", GoRoutine)
+	server.ShowRegistry()
 	server.Start()
 }

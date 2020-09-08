@@ -2,6 +2,8 @@ package oscrud
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strings"
@@ -20,7 +22,7 @@ type Oscrud struct {
 
 	state      map[string]interface{}
 	transports map[TransportID]Transport
-	routes     []Route
+	routes     []*Route
 	logger     []Logger
 	binder     *binder.Binder
 }
@@ -30,7 +32,7 @@ func NewOscrud() *Oscrud {
 	return &Oscrud{
 		state:      make(map[string]interface{}),
 		transports: make(map[TransportID]Transport),
-		routes:     make([]Route, 0),
+		routes:     make([]*Route, 0),
 		logger:     make([]Logger, 0),
 		binder:     binder.NewBinder(),
 	}
@@ -121,7 +123,7 @@ func (server *Oscrud) RegisterEndpoint(method, endpoint string, handler Handler,
 		route.TransportOptions.DisableRegister = make(map[TransportID]bool)
 	}
 
-	server.routes = append(server.routes, *route)
+	server.routes = append(server.routes, route)
 	for _, transport := range server.transports {
 		if isDisabled, ok := route.TransportOptions.DisableRegister[transport.Name()]; ok && isDisabled {
 			continue
@@ -163,6 +165,41 @@ func (server *Oscrud) RegisterService(basePath string, service Service, serviceO
 	}
 
 	return server
+}
+
+// ShowRegistry :
+func (server *Oscrud) ShowRegistry() {
+
+	bytes, _ := json.Marshal(server.state)
+	transports := make([]string, 0)
+	for transportID := range server.transports {
+		transports = append(transports, string(transportID))
+	}
+
+	fmt.Println("Server: ")
+	fmt.Printf("  middleware: %d ( before ), %d ( after )\n", len(server.Before), len(server.After))
+	fmt.Println("  timeout: ", server.Duration)
+	fmt.Println("  event: ", server.OnComplete != nil)
+	fmt.Println("  transport: ", strings.Join(transports, ", "))
+	fmt.Printf("  state: %s\n", bytes)
+
+	fmt.Println("\nRoutes: ")
+	for _, val := range server.routes {
+		disabled := make([]string, 0)
+		for transportID := range val.DisableRegister {
+			disabled = append(disabled, string(transportID))
+		}
+
+		fmt.Println("  " + val.Method + " " + val.Path)
+		fmt.Printf("    middleware: %d ( before ), %d ( after )\n", len(val.Before), len(val.After))
+		fmt.Println("    timeout: ", val.Duration)
+		fmt.Println("    event: ", val.OnComplete != nil)
+		if len(disabled) > 0 {
+			fmt.Println("    disabled_on: ", strings.Join(disabled, ", "))
+		} else {
+			fmt.Println("    disabled_on: none")
+		}
+	}
 }
 
 // Start :

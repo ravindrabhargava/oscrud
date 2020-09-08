@@ -21,6 +21,20 @@ type Context struct {
 	routine  *errgroup.Group
 }
 
+// Request :
+func (c *Context) Request(tid TransportID, request *Request, response interface{}) error {
+	r := reflect.ValueOf(response)
+	if r.Kind() != reflect.Ptr {
+		return ErrSourceNotAddressable
+	}
+
+	t, ok := c.oscrud.GetTransport(tid)
+	if !ok {
+		return ErrTransportNotExists
+	}
+	return t.Request(request, response)
+}
+
 // Get :
 func (c *Context) Get(key string) interface{} {
 
